@@ -311,8 +311,13 @@ a{text-decoration:none;color:inherit}
 .post-meta{display:flex;align-items:center;gap:18px;flex-wrap:wrap;color:var(--text-2);font-size:13px}
 .post-meta .item{display:flex;align-items:center;gap:7px}
 .post-meta .avatar{width:26px;height:26px;border-radius:50%;object-fit:cover}
-.post-cover{border-radius:var(--radius);overflow:hidden;margin-bottom:28px;box-shadow:var(--shadow)}
-.post-cover img{width:100%;display:block}
+.post-cover{border-radius:var(--radius);overflow:hidden;margin-bottom:28px;box-shadow:var(--shadow);aspect-ratio:16/9;background:#F3F5F8}
+.post-cover img{width:100%;height:100%;display:block;object-fit:cover}
+/* 图未到位的品牌兜底封面：纯图形，不用文字占位 */
+.page-cover-fallback{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;margin-bottom:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1B2340 0%,#2E3566 55%,#4A2F6B 100%);box-shadow:var(--shadow)}
+.page-cover-fallback::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,79,.28),transparent 68%);top:-170px;right:-80px;pointer-events:none}
+.page-cover-fallback::after{content:"";position:absolute;left:-60px;bottom:-180px;width:320px;height:320px;border:1px solid rgba(255,255,255,.09);border-radius:50%;pointer-events:none}
+.page-cover-fallback img{position:relative;z-index:1;width:96px;height:96px;object-fit:contain;opacity:.95}
 .post-player{margin-bottom:28px}
 
 /* 文章归档：视频/图文筛选条 */
@@ -482,9 +487,9 @@ a{text-decoration:none;color:inherit}
 .hub-media{position:relative;height:172px;background:#F3F5F8;overflow:hidden}
 .hub-media img{display:block;width:100%;height:100%;object-fit:cover;transition:.3s}
 .hub-course:hover .hub-media img{transform:scale(1.03)}
-.hub-media-empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#EEF1F8 0%,#F7F2FB 100%);color:var(--accent)}
-.hub-media-empty span{font-size:40px;line-height:1}
-.hub-media-empty small{font-size:12px;letter-spacing:1px;color:var(--text-3)}
+.hub-media-fallback{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,#1B2340 0%,#2E3566 55%,#4A2F6B 100%)}
+.hub-media-fallback::before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,79,.25),transparent 68%);top:-90px;right:-50px;pointer-events:none}
+.hub-media-fallback img{position:relative;z-index:1;width:88px;height:88px;object-fit:contain;opacity:.95}
 .hub-media-cat{position:absolute;top:14px;left:14px;padding:5px 12px;border-radius:14px;background:rgba(255,255,255,.94);color:var(--text);font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .hub-media-count{position:absolute;bottom:14px;right:14px;padding:5px 11px;border-radius:14px;background:rgba(17,17,17,.82);color:#fff;font-size:12px}
 .hub-body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
@@ -622,7 +627,8 @@ a{text-decoration:none;color:inherit}
 .rel-cover.g0{background:linear-gradient(135deg,#1F2A4A,#3C528C)}
 .rel-cover.g1{background:linear-gradient(135deg,#3B2A56,#7A4B8C)}
 .rel-cover.g2{background:linear-gradient(135deg,#123F3A,#2E7D6B)}
-.rel-glyph{font-size:40px;line-height:1;color:rgba(255,255,255,.92);font-weight:800}
+.rel-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.rel-cover img.rel-fallback{position:relative;inset:auto;width:46px;height:46px;object-fit:contain;opacity:.92}
 .rel-cat{position:absolute;left:12px;bottom:11px;height:22px;padding:0 9px;border-radius:11px;background:rgba(255,255,255,.92);color:#1F2A4A;font-size:11px;font-weight:700;display:inline-flex;align-items:center}
 .rel-body{padding:15px 16px 17px;display:flex;flex-direction:column;flex:1}
 .rel-date{font-size:11.5px;color:var(--text-3);font-family:'Inter',sans-serif}
@@ -1307,7 +1313,6 @@ a{text-decoration:none;color:inherit}
 
 /* ===== 本地矢量图标尺寸微调 ===== */
 .channels .ch .ico .sicon,.ch .ico .sicon{width:18px;height:18px}
-.hub-media-empty span .sicon{font-size:40px}
 .hub-toggle-arrow .sicon{width:16px;height:16px}
 .sicon{pointer-events:none}
 

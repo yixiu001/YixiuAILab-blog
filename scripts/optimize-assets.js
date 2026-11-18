@@ -54,6 +54,15 @@ function register(hexo){
   });
 }
 
+// hexo server 模式下 hexo.log 可能尚未初始化，直接调用 log.warn 会抛
+// "Cannot read properties of undefined (reading '_writeLogOutput')"，这里兜一层。
+function say(log, level, msg){
+  try{
+    if(log && typeof log[level] === 'function'){ log[level](msg); return; }
+  }catch(e){ /* 忽略 logger 异常，退回 console */ }
+  if(level === 'info') console.log(msg); else console.warn(msg);
+}
+
 function minifyPublic(publicDir, log){
   // Hexo 默认忽略下划线开头的文件，手动把 Pages 响应头配置放进产物
   var headersSrc = path.join(__dirname, '..', 'source', '_headers');
@@ -67,14 +76,14 @@ function minifyPublic(publicDir, log){
     var CleanCSS = require('clean-css');
     var result = new CleanCSS({ level:2, rebase:false }).minify(src);
     if(result.errors && result.errors.length){
-      (log ? log.warn : console.warn)('[optimize] CSS minify skipped: ' + result.errors.join('; '));
+      say(log, 'warn', '[optimize] CSS minify skipped: ' + result.errors.join('; '));
       return;
     }
     if(Buffer.byteLength(result.styles) >= Buffer.byteLength(src)) return;  // 已压缩过
     fs.writeFileSync(target, result.styles, 'utf8');
-    (log ? log.info : console.log)('[optimize] CSS minified: ' + Buffer.byteLength(src) + ' -> ' + Buffer.byteLength(result.styles) + ' bytes');
+    say(log, 'info', '[optimize] CSS minified: ' + Buffer.byteLength(src) + ' -> ' + Buffer.byteLength(result.styles) + ' bytes');
   }catch(e){
-    (log ? log.warn : console.warn)('[optimize] CSS minify failed: ' + e.message);
+    say(log, 'warn', '[optimize] CSS minify failed: ' + e.message);
   }
 }
 

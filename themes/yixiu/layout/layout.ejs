@@ -14,10 +14,10 @@
     var seoCanonical = seoRel ? (seoBase + '/' + seoRel.replace(/\/$/, '') + '/') : (seoBase + '/');
     var seoDesc = page.description || page.summary || config.description || '';
     var seoTitle = page.title ? (page.title + ' · ' + config.title) : config.title;
-    var seoCover = String(page.cover || '');
+    var seoCover = coverFor(page.cover, page.path) || '/images/logo.png';
     var seoImage = /^https?:\/\//i.test(seoCover)
       ? seoCover
-      : (seoCover ? seoBase + '/' + seoCover.replace(/^\/+/, '') : seoBase + '/images/avatar.jpg');
+      : seoBase + '/' + seoCover.replace(/^\/+/, '');
     var seoType = (page.layout === 'post' || page.layout === 'course') ? 'article' : 'website';
   %>
   <meta name="description" content="<%= seoDesc %>">

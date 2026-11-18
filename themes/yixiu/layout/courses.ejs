@@ -44,10 +44,11 @@
   <% var firstPath = first ? (first.segments && first.segments.length ? first.segments[0].path : first.path) : null; %>
   <article class="hub-course" id="<%= c.id %>" data-cat="<%= c.category || '未分类' %>">
     <div class="hub-media">
-      <% if(c.cover){ %>
-      <img src="<%= url_for(c.cover) %>" alt="<%= c.title %>" loading="lazy">
+      <% var cCover = coverFor(c.cover, c.id); %>
+      <% if(cCover){ %>
+      <img src="<%= url_for(cCover) %>" alt="<%= c.title %>" loading="lazy">
       <% } else { %>
-      <div class="hub-media-empty"><span><svg class="sicon"><use href="#i-grid"></use></svg></span><small>图文讲义课</small></div>
+      <div class="hub-media-fallback"><img src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt=""></div>
       <% } %>
       <% if(c.category){ %><span class="hub-media-cat"><%= c.category %></span><% } %>
       <span class="hub-media-count"><%= cnt %> 节</span>

@@ -55,7 +55,8 @@
   if(vm) videoId = vm[1];
   // enablejsapi=1：允许时间轴通过 postMessage 控制播放器跳转
   var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId + '?enablejsapi=1' : '';
-  var videoCover = videoId ? url_for('/images/videos/' + videoId + '.jpg') : '';
+  // 页面专属封面：由 scripts/covers.js 按 source/images/covers/ 自动匹配
+  var coverUrl = coverFor(page.cover, page.path);
 
   // 长视频时间轴：把一个视频按时间点拆成目录，点击跳到对应秒数。
   // mm:ss / hh:mm:ss 统一转秒；数据源优先取讲义 front-matter，其次 courses.yml 当前条目。
@@ -107,13 +108,20 @@
   <!-- 第二行：讲义正文 + 右侧栏，右栏顶部与播放器/讲义对齐 -->
   <main class="layout">
   <article class="content">
-    <!-- 视频播放器：有 video 字段才显示，纯图文课程直接展示讲义 -->
+    <!-- 封面：每节课都有封面图；视频页点击封面即播放，封面不再取视频缩略图 -->
     <% if(embedUrl){ %>
     <div class="video-embed" data-src="<%= embedUrl %>">
-      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(coverUrl){ %> style="background-image:url('<%= url_for(coverUrl) %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
     </div>
-    <% } else if(page.video){ %>
+    <% } else { %>
+    <% if(coverUrl){ %>
+    <div class="post-cover"><img src="<%= url_for(coverUrl) %>" alt="<%= page.title %>"></div>
+    <% } else { %>
+    <div class="page-cover-fallback"><img src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt=""></div>
+    <% } %>
+    <% if(page.video){ %>
     <div class="player-fallback"><a href="<%= page.video %>" target="_blank" rel="noopener"><svg class="sicon"><use href="#i-play"></use></svg> 在新窗口观看视频</a></div>
+    <% } %>
     <% } %>
 
     <!-- 讲义标题 -->

@@ -6,8 +6,9 @@
   var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
   if(vm) videoId = vm[1];
   var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
-  var videoCover = videoId ? url_for('/images/videos/' + videoId + '.jpg') : '';
   var isVideo = !!videoId;
+  // 页面专属封面：由 scripts/covers.js 按 source/images/covers/ 自动匹配
+  var coverUrl = coverFor(page.cover, page.path);
 
   // 阅读时长估算（按正文纯文本字数，约 350 字/分钟）
   var plain = String(page.content || '').replace(/<[^>]*>/g, '').replace(/\s+/g, '');
@@ -67,13 +68,15 @@
       <nav class="toc-list" id="toc-m-list" aria-label="文章目录"></nav>
     </details>
 
-    <!-- 封面：视频文章显示播放器，纯图文显示封面图 -->
+    <!-- 封面：所有文章页都有封面图；视频页点击封面即播放，封面不再取视频缩略图 -->
     <% if(embedUrl){ %>
     <div class="video-embed" data-src="<%= embedUrl %>">
-      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(coverUrl){ %> style="background-image:url('<%= url_for(coverUrl) %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
     </div>
-    <% } else if(page.cover){ %>
-    <div class="post-cover"><img src="<%= url_for(page.cover) %>" alt="<%= page.title %>"></div>
+    <% } else if(coverUrl){ %>
+    <div class="post-cover"><img src="<%= url_for(coverUrl) %>" alt="<%= page.title %>"></div>
+    <% } else { %>
+    <div class="page-cover-fallback"><img src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt=""></div>
     <% } %>
 
     <!-- 摘要 -->
@@ -99,7 +102,9 @@
       <% var rpCat = rpCatObj && rpCatObj.name ? rpCatObj.name : '文章'; %>
       <a href="<%= url_for(p.path) %>" class="rel-card">
         <div class="rel-cover g<%= i % 3 %>">
-          <span class="rel-glyph"><% if(relVideo(p)){ %><svg class="sicon"><use href="#i-play"></use></svg><% } else { %><%= rpCat.charAt(0) %><% } %></span>
+          <% var rpCover = coverFor(p.cover, p.path); %>
+          <% if(rpCover){ %><img src="<%= url_for(rpCover) %>" alt="" loading="lazy">
+          <% } else { %><img class="rel-fallback" src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt=""><% } %>
           <span class="rel-cat"><%= rpCat %><%= relVideo(p) ? ' · 视频' : '' %></span>
         </div>
         <div class="rel-body">

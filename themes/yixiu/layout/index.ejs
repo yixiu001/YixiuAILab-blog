@@ -36,17 +36,6 @@
   var cHighlights = mainCourse ? (mainCourse.highlights || legacy.highlights || []) : (legacy.highlights || []);
   var lessonCount = mainLessonCount || totalLessons;
 
-  // 章节预览：每门课取第一章第一节，最多 3 个
-  var previews = [];
-  courses.forEach(function(c){
-    var g = c.chapters && c.chapters[0];
-    if(g && g.items && g.items.length){
-      var it = g.items[0];
-      previews.push({ course: c.short || c.title, group: g.group, chapter: it.chapter, title: it.title, duration: it.duration, path: it.path });
-    }
-  });
-  previews = previews.slice(0, 3);
-
   // 最新文章（取前 6 篇）
   var latest = posts.sort('date', -1).limit(6);
 %>
@@ -118,26 +107,6 @@
       <% }); %>
     </div>
     <% } %>
-  </div>
-</section>
-
-<!-- 课程章节预览 -->
-<section class="v2chapter-section">
-  <div class="wrap">
-    <div class="v2sec-head"><h2 class="v2sec-title">课程章节</h2><a href="<%= url_for('/courses/') %>" class="v2sec-more">全部 <%= totalLessons %> 节 →</a></div>
-    <div class="v2chapter-grid">
-      <% previews.forEach(function(p){ %>
-      <a href="<%= url_for(p.path) %>" class="v2chapter-card">
-        <div class="v2cc-top"><span class="v2cc-group"><%= p.course %></span><span class="v2cc-dur"><%= p.duration %></span></div>
-        <div class="v2cc-num"><%= ('0'+p.chapter).slice(-2) %></div>
-        <h3 class="v2cc-title"><%= p.title %></h3>
-        <span class="v2cc-go">开始学习 →</span>
-      </a>
-      <% }); %>
-      <% if(!previews.length){ %>
-      <div class="v2empty">还没有课程章节，去 <code>source/_data/courses.yml</code> 添加吧。</div>
-      <% } %>
-    </div>
   </div>
 </section>
 

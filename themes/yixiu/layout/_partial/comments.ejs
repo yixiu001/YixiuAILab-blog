@@ -36,11 +36,13 @@
   <% if(cmReady && cmProvider === 'cloudflare'){ %>
   <!-- Cloudflare Workers + D1：前端直连自建 API，数据在自己手里 -->
   <div class="cm-body">
-    <form class="cm-form" id="cm-form" autocomplete="off">
-      <div class="cm-form-row">
-        <input class="cm-input" id="cm-name" type="text" maxlength="24" placeholder="你的昵称（选填）" aria-label="昵称">
-        <span class="cm-hint" id="cm-name-hint">不填则显示为「匿名访客」</span>
-      </div>
+    <!-- 未登录：不开放评论输入，只给登录入口 -->
+    <div class="cm-gate" id="cm-gate">
+      <span class="cm-gate-ic"><svg class="sicon"><use href="#i-github"></use></svg></span>
+      <div class="cm-gate-tx">登录后即可参与评论<small>使用 GitHub 账号，评论会自动署名</small></div>
+      <button class="cm-gate-btn" id="cm-login-btn" type="button">GitHub 登录</button>
+    </div>
+    <form class="cm-form" id="cm-form" autocomplete="off" hidden>
       <textarea class="cm-textarea" id="cm-content" maxlength="500" rows="3" placeholder="说点什么吧…（支持纯文本，最多 500 字）" aria-label="评论内容" required></textarea>
       <div class="cm-form-foot">
         <span class="cm-count" id="cm-count">0 / 500</span>
@@ -55,17 +57,16 @@
     var API = <%- jsLit(cf.api) %>.replace(/\/+$/, '') + '/api/comments';
     var PAGE = location.pathname;
     var form = document.getElementById('cm-form');
-    var nameEl = document.getElementById('cm-name');
+    var gate = document.getElementById('cm-gate');
+    var loginBtn = document.getElementById('cm-login-btn');
     var contentEl = document.getElementById('cm-content');
     var countEl = document.getElementById('cm-count');
     var statusEl = document.getElementById('cm-status');
     var listEl = document.getElementById('cm-list');
     var submitEl = document.getElementById('cm-submit');
-    var nameRow = nameEl.parentNode;
-    var nameHint = document.getElementById('cm-name-hint');
     if(!API || !form) return;
 
-    // 评论草稿按页面路径存本地，刷新后回填；只存文本与昵称，7 天过期
+    // 评论草稿按页面路径存本地，刷新后回填；只存正文，7 天过期
     var draftKey = 'yixiu.draft.' + PAGE;
     var draftTimer = null;
     function readDraft(){
@@ -80,10 +81,8 @@
     }
     function saveDraft(){
       try{
-        if(!contentEl.value && !nameEl.value){ localStorage.removeItem(draftKey); return; }
-        localStorage.setItem(draftKey, JSON.stringify({
-          text: contentEl.value, name: nameEl.value, at: Date.now()
-        }));
+        if(!contentEl.value){ localStorage.removeItem(draftKey); return; }
+        localStorage.setItem(draftKey, JSON.stringify({ text: contentEl.value, at: Date.now() }));
       }catch(e){ /* 隐私模式或容量满：静默降级 */ }
     }
     function clearDraft(){
@@ -92,7 +91,6 @@
     var draft = readDraft();
     if(draft){
       contentEl.value = draft.text || '';
-      if(draft.name) nameEl.value = String(draft.name).slice(0, 24);
       countEl.textContent = contentEl.value.length + ' / 500';
     }
     function onDraftInput(){
@@ -101,13 +99,14 @@
       draftTimer = setTimeout(saveDraft, 300);
     }
 
-    // GitHub 登录态：登录后评论自动署名，昵称框让位给身份提示
+    // GitHub 登录态：未登录只显示登录闸门，登录后开放表单并自动署名
     var authUser = null;
     function applyAuth(user){
       authUser = user || null;
+      form.hidden = !authUser;               // 未登录不开放评论输入
+      if(gate) gate.hidden = !!authUser;
+      var tip = document.getElementById('cm-auth-tip');
       if(authUser){
-        nameRow.style.display = 'none';
-        var tip = document.getElementById('cm-auth-tip');
         if(!tip){
           tip = el('div', 'cm-auth-tip');
           tip.id = 'cm-auth-tip';
@@ -123,11 +122,17 @@
         tx.appendChild(document.createTextNode(' · 评论将以 GitHub 身份发布'));
         tip.appendChild(av);
         tip.appendChild(tx);
-      }else{
-        nameRow.style.display = '';
-        var old = document.getElementById('cm-auth-tip');
-        if(old) old.parentNode.removeChild(old);
+      }else if(tip){
+        tip.parentNode.removeChild(tip);
       }
+    }
+    // 登录闸门按钮：调用全站登录入口，登录成功后跳回本页
+    if(loginBtn){
+      loginBtn.addEventListener('click', function(){
+        if(window.YixiuAuth && window.YixiuAuth.loginUrl){
+          location.href = window.YixiuAuth.loginUrl(location.pathname + location.search);
+        }
+      });
     }
     // 缓存的公开资料只用于即时展示；只有服务端确认的登录态才能用于评论署名
     function verifiedUser(d){
@@ -230,9 +235,9 @@
       io.observe(block);
     }
     contentEl.addEventListener('input', onDraftInput);
-    nameEl.addEventListener('input', onDraftInput);
     form.addEventListener('submit', function(e){
       e.preventDefault();
+      if(!authUser){ setStatus('请先登录 GitHub 后再发表评论。', 'err'); return; }
       var content = contentEl.value.trim();
       if(!content){ setStatus('评论内容不能为空。', 'err'); return; }
       submitEl.disabled = true;
@@ -240,14 +245,10 @@
       setStatus('');
       var postOpt = {
         method:'POST',
+        credentials:'include',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          path: PAGE,
-          name: authUser ? '' : nameEl.value.trim(),
-          content: content
-        })
+        body: JSON.stringify({ path: PAGE, content: content })
       };
-      if(authUser) postOpt.credentials = 'include';
       fetch(API, postOpt)
         .then(function(r){ return r.json(); })
         .then(function(d){
@@ -255,12 +256,14 @@
           clearTimeout(draftTimer);
           clearDraft();
           contentEl.value = '';
-          nameEl.value = '';
           countEl.textContent = '0 / 500';
           load();
         })
         .catch(function(err){
-          setStatus(err && err.message === 'rate_limited' ? '发得太快啦，歇一会儿再发。' : '提交失败，请稍后再试。', 'err');
+          var msg = err && err.message;
+          setStatus(msg === 'rate_limited' ? '发得太快啦，歇一会儿再发。'
+            : msg === 'login_required' ? '登录状态已失效，请重新登录后再发表评论。'
+            : '提交失败，请稍后再试。', 'err');
         })
         .then(function(){
           submitEl.disabled = false;

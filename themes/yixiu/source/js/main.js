@@ -41,18 +41,60 @@
     tabs.insertBefore(heads, panes[0]);
   });
 
-  // video：点击封面才加载 iframe（无痕、省流量）
+  // video：点击封面才加载 iframe（无痕、省流量）；支持时间轴带起点秒数跳转
   document.querySelectorAll('.video-embed').forEach(function(box){
     var cover = box.querySelector('.vcover');
     if(!cover) return;
-    cover.addEventListener('click', function(){
+    var base = box.getAttribute('data-src') || '';
+    // load(start)：start 为 0 或空则从头播；否则给 YouTube embed 追加 start 参数
+    box.load = function(start){
+      if(box.querySelector('iframe')) return; // 已加载，交由 postMessage 处理
+      var src = base;
+      if(start && start > 0){
+        src += (src.indexOf('?') > -1 ? '&' : '?') + 'start=' + Math.floor(start);
+      }
       var iframe = document.createElement('iframe');
-      iframe.src = box.getAttribute('data-src');
+      iframe.src = src;
       iframe.setAttribute('allowfullscreen', '');
       iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
       iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       box.innerHTML = '';
       box.appendChild(iframe);
+      // iframe 就绪后再发一次 seekTo，确保从指定秒播放
+      if(start && start > 0){
+        iframe.addEventListener('load', function(){
+          try{
+            iframe.contentWindow.postMessage(JSON.stringify({
+              event:'command', func:'seekTo', args:[start, true]
+            }), 'https://www.youtube.com');
+          }catch(e){}
+        });
+      }
+    };
+    cover.addEventListener('click', function(){ box.load(0); });
+  });
+
+  // 课程目录里的长视频时间轴：点击时间点跳到对应秒数（YouTube start 参数 / IFrame seekTo）
+  document.querySelectorAll('.tl-step').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sec = parseInt(btn.getAttribute('data-at'), 10) || 0;
+      var list = btn.closest('.cat-tl-body');
+      if(list) list.querySelectorAll('.tl-step').forEach(function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      var box = document.querySelector('.video-embed');
+      if(!box) return;
+      var iframe = box.querySelector('iframe');
+      if(!iframe){
+        if(typeof box.load === 'function') box.load(sec); // 首次播放：带 start 加载
+      } else {
+        // 已加载：走 YouTube IFrame Player API，不重载视频
+        try{
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event:'command', func:'seekTo', args:[sec, true]
+          }), 'https://www.youtube.com');
+        }catch(e){}
+      }
+      if(box.scrollIntoView) box.scrollIntoView({behavior:'smooth', block:'center'});
     });
   });
 
@@ -573,5 +615,20 @@
   var topBtn = document.getElementById('toc-top');
   if(topBtn) topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+
+/* 课程期组：单视频节直显，多段期默认折叠、点击展开查看各段 */
+(function(){
+  document.querySelectorAll('.ep-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var row = btn.parentElement;
+      var body = row.querySelector('.cat-ep-body, .hub-ep-body, .cat-tl-body');
+      if(!body) return;
+      var willOpen = body.hidden;
+      body.hidden = !willOpen;
+      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      btn.classList.toggle('on', willOpen);
+    });
   });
 })();

@@ -56,6 +56,13 @@
 
   // verified 表示服务端已确认登录态；缓存资料仅为展示，verified=false
   var state = { ready:false, configured:null, user:null, verified:false };
+  // 记录最近一次画到 DOM 上的外观；后台校验回来若外观未变则不重绘，避免登录区闪一下
+  var lastPaintKey = null;
+  function paintKey(){
+    if(state.configured === false || (state.configured === null && !state.user)) return 'placeholder';
+    if(state.user) return 'user:' + state.user.login + '|' + (state.user.avatar_url || '');
+    return 'anon';
+  }
 
   function fire(){
     document.dispatchEvent(new CustomEvent('yixiu:auth', { detail: {
@@ -76,6 +83,10 @@
   function render(){
     var slot = document.getElementById('auth-slot');
     if(!slot) return;
+    // 外观未变化（如后台校验确认了同一用户）时保留现有 DOM 与事件，不清空重建
+    var key = paintKey();
+    if(key === lastPaintKey) return;
+    lastPaintKey = key;
     slot.innerHTML = '';
 
     // 未配置凭证：正式域名不显示入口；本地预览显示占位按钮，便于确认位置与样式

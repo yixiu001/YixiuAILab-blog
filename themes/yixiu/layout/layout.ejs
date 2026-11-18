@@ -50,9 +50,10 @@
 <body>
   <%- partial('_partial/icons') %>
   <%- partial('_partial/header') %>
+  <%# auth.js 紧随 header 同步执行：解析到导航时即刻用缓存资料渲染登录态，首屏不空白、刷新不闪 %>
+  <script src="<%= assetUrl('/js/auth.js') %>"></script>
   <main class="page-main"><%- body %></main>
   <%- partial('_partial/footer') %>
-  <script defer src="<%= assetUrl('/js/auth.js') %>"></script>
   <script defer src="<%= assetUrl('/js/main.js') %>"></script>
 </body>
 </html>

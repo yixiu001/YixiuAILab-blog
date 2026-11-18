@@ -22,14 +22,30 @@
   var courseTitle = course.title || page.course_title || '课程';
   var courseShort = course.short || courseTitle;
 
-  // 展平当前课程的章节，计算上下节与学习进度
+  // 期组辅助：有 segments 的 item = 多段期（一期含若干独立视频段），否则为单视频节。
+  // 导航按「段」展平：单视频节 = 1 个导航节点；期组 = 每段各 1 个节点。保证上下节不因分组而断。
   var flat = [];
-  chaptersData.forEach(function(g){ (g.items || []).forEach(function(it){ flat.push(it); }); });
+  chaptersData.forEach(function(g){ (g.items || []).forEach(function(it){
+    if(it.segments && it.segments.length){
+      it.segments.forEach(function(s){ flat.push({ chapter:s.chapter, title:s.title, duration:s.duration, path:s.path, parent:it }); });
+    } else {
+      flat.push({ chapter:it.chapter, title:it.title, duration:it.duration, path:it.path, parent:null });
+    }
+  }); });
   flat.sort(function(a,b){ return a.chapter - b.chapter; });
   var total = flat.length || course.total || 0;
   var idx = -1; flat.forEach(function(it,i){ if(it.chapter === curChapter){ idx = i; } });
   var prev = idx > 0 ? flat[idx-1] : null;
   var next = idx >= 0 && idx < flat.length-1 ? flat[idx+1] : null;
+  // 当前页所属的期组（侧栏高亮用）
+  var curEpisode = null;
+  flat.forEach(function(it){ if(it.chapter === curChapter && it.parent) curEpisode = it.parent; });
+  // mm:ss 时长合计，用于期组显示总时长
+  function sumDur(arr){
+    var sec = 0;
+    (arr || []).forEach(function(x){ var m = String(x.duration || '0:00').split(':'); sec += (parseInt(m[0],10)||0)*60 + (parseInt(m[1],10)||0); });
+    return ('0' + Math.floor(sec/60)).slice(-2) + ':' + ('0' + (sec%60)).slice(-2);
+  }
   // 章节位置：客观反映「当前是第几节 / 总节数」，不代表用户学习进度（静态站无法追踪）
   var progress = total ? Math.round(curChapter / total * 100) + '%' : '0%';
 
@@ -37,8 +53,24 @@
   var videoId = '';
   var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
   if(vm) videoId = vm[1];
-  var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
+  // enablejsapi=1：允许时间轴通过 postMessage 控制播放器跳转
+  var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId + '?enablejsapi=1' : '';
   var videoCover = videoId ? url_for('/images/videos/' + videoId + '.jpg') : '';
+
+  // 长视频时间轴：把一个视频按时间点拆成目录，点击跳到对应秒数。
+  // mm:ss / hh:mm:ss 统一转秒；数据源优先取讲义 front-matter，其次 courses.yml 当前条目。
+  function toSec(s){
+    var parts = String(s || '0:00').split(':'), n = 0;
+    parts.forEach(function(x){ n = n * 60 + (parseInt(x, 10) || 0); });
+    return n;
+  }
+  var curItem = null;
+  chaptersData.forEach(function(g){ (g.items || []).forEach(function(it){
+    if(it.segments && it.segments.length){
+      it.segments.forEach(function(s){ if(s.chapter === curChapter) curItem = s; });
+    } else if(it.chapter === curChapter) curItem = it;
+  }); });
+  var timeline = (page.timeline && page.timeline.length) ? page.timeline : ((curItem && curItem.timeline) || []);
 
   // 其他课程（用于课程间切换）
   var otherCourses = courses.filter(function(c){ return c.id !== courseId; }).map(function(c){
@@ -133,11 +165,48 @@
         <% chaptersData.forEach(function(group){ %>
         <div class="cat-group"><%= group.group %></div>
         <% (group.items || []).forEach(function(it){ %>
+        <% if(it.segments && it.segments.length){ %>
+        <% var inThis = it.segments.some(function(s){ return s.chapter === curChapter; }); %>
+        <div class="cat-ep <%= inThis ? 'on' : '' %>">
+          <button type="button" class="cat-ep-head ep-toggle" aria-expanded="<%= inThis ? 'true' : 'false' %>">
+            <span class="cat-ep-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span>
+            <span class="cat-ep-title"><%= it.episode || it.title %></span>
+            <span class="cat-ep-badge"><%= it.segments.length %> 段</span>
+          </button>
+          <div class="cat-ep-body"<%= inThis ? '' : ' hidden' %>>
+            <% it.segments.forEach(function(s){ %>
+            <a href="<%= s.path ? url_for(s.path) : '#' %>" class="chap seg <%= s.chapter === curChapter ? 'on' : '' %>">
+              <span class="no"><%= s.chapter %></span>
+              <%= s.title %><span class="dur"><%= s.duration %></span>
+            </a>
+            <% }); %>
+          </div>
+        </div>
+        <% } else if(it.timeline && it.timeline.length){ %>
+        <% var inTl = it.chapter === curChapter; %>
+        <div class="cat-tl <%= inTl ? 'on' : '' %>">
+          <button type="button" class="cat-tl-head ep-toggle" aria-expanded="<%= inTl ? 'true' : 'false' %>">
+            <span class="cat-ep-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span>
+            <span class="cat-ep-title"><%= it.title %></span>
+            <span class="cat-ep-badge"><%= it.timeline.length %> 点</span>
+          </button>
+          <div class="cat-tl-body"<%= inTl ? '' : ' hidden' %>>
+            <% it.timeline.forEach(function(t){ %>
+            <button type="button" class="tl-step" data-at="<%= toSec(t.at) %>">
+              <span class="tl-dot"></span>
+              <span class="tl-time"><%= t.at %></span>
+              <span class="tl-txt"><%= t.title %></span>
+            </button>
+            <% }); %>
+          </div>
+        </div>
+        <% } else { %>
         <% var isOn = it.chapter === curChapter; %>
         <a href="<%= it.path ? url_for(it.path) : '#' %>" class="chap <%= isOn ? 'on' : '' %>">
           <span class="no"><%= it.chapter %></span>
           <%= it.title %><span class="dur"><%= it.duration %></span>
         </a>
+        <% } %>
         <% }); %>
         <% }); %>
       </div>

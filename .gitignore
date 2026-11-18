@@ -17,3 +17,6 @@ _multiconfig.yml
 
 # 统一使用 npm，避免 Cloudflare 误选 Yarn Berry
 yarn.lock
+
+# 本地时间轴演示课：仅用于功能预览，不入库、不参与线上构建
+source/courses/google-signup/

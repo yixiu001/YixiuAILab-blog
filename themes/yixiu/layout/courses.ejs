@@ -2,8 +2,10 @@
   // 课程中心：自动列出 courses.yml 中的全部课程，新增课程无需改模板
   var courses = site.data.courses || [];
   var totalLessons = 0, totalCourses = courses.length;
+  // 一期若有 segments，按段数计；否则按 1 节计
+  function itemCount(it){ return (it.segments && it.segments.length) ? it.segments.length : 1; }
   courses.forEach(function(c){
-    (c.chapters || []).forEach(function(g){ totalLessons += (g.items || []).length; });
+    (c.chapters || []).forEach(function(g){ (g.items || []).forEach(function(it){ totalLessons += itemCount(it); }); });
   });
   // 从课程数据自动生成分类（保持首次出现顺序）
   var categories = [];
@@ -38,7 +40,8 @@
   <div class="hub-grid" id="hub-grid">
   <% courses.forEach(function(c, ci){ %>
   <% var cnt = 0, first = null; %>
-  <% (c.chapters || []).forEach(function(g){ (g.items || []).forEach(function(it){ cnt++; if(!first) first = it; }); }); %>
+  <% (c.chapters || []).forEach(function(g){ (g.items || []).forEach(function(it){ cnt += itemCount(it); if(!first) first = it; }); }); %>
+  <% var firstPath = first ? (first.segments && first.segments.length ? first.segments[0].path : first.path) : null; %>
   <article class="hub-course" id="<%= c.id %>" data-cat="<%= c.category || '未分类' %>">
     <div class="hub-media">
       <% if(c.cover){ %>
@@ -58,7 +61,7 @@
         <% if(c.teacher){ %><span><%= c.teacher %></span><% } %>
       </div>
       <div class="hub-actions">
-        <% if(first){ %><a href="<%= url_for(first.path) %>" class="hub-cta-btn">开始学习 <span>→</span></a><% } %>
+        <% if(firstPath){ %><a href="<%= url_for(firstPath) %>" class="hub-cta-btn">开始学习 <span>→</span></a><% } %>
         <button class="hub-toggle" type="button" aria-expanded="false" aria-controls="chapters-<%= c.id %>">查看目录 <span class="hub-toggle-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span></button>
       </div>
     </div>
@@ -67,7 +70,24 @@
       <div class="hub-group"><%= g.group %></div>
       <div class="hub-list">
         <% (g.items || []).forEach(function(it){ %>
+        <% if(it.segments && it.segments.length){ %>
+        <% var segTotal = 0; it.segments.forEach(function(s){ var m = String(s.duration||'0:00').split(':'); segTotal += (parseInt(m[0],10)||0)*60 + (parseInt(m[1],10)||0); }); %>
+        <div class="hub-ep">
+          <button type="button" class="hub-ep-head ep-toggle" aria-expanded="false">
+            <span class="hub-ep-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span>
+            <span class="hub-i-t"><%= it.episode || it.title %></span>
+            <span class="hub-ep-badge"><%= it.segments.length %> 段</span>
+            <span class="hub-i-d"><%= ('0'+Math.floor(segTotal/60)).slice(-2) %>:<%= ('0'+(segTotal%60)).slice(-2) %></span>
+          </button>
+          <div class="hub-ep-body" hidden>
+            <% it.segments.forEach(function(s){ %>
+            <a href="<%= s.path ? url_for(s.path) : '#' %>" class="hub-item seg"><span class="hub-i-no"><%= ('0'+s.chapter).slice(-2) %></span><span class="hub-i-t"><%= s.title %></span><span class="hub-i-d"><%= s.duration %></span><span class="hub-i-go">→</span></a>
+            <% }); %>
+          </div>
+        </div>
+        <% } else { %>
         <a href="<%= it.path ? url_for(it.path) : '#' %>" class="hub-item"><span class="hub-i-no"><%= ('0'+it.chapter).slice(-2) %></span><span class="hub-i-t"><%= it.title %></span><span class="hub-i-d"><%= it.duration %></span><span class="hub-i-go">→</span></a>
+        <% } %>
         <% }); %>
       </div>
       <% }); %>

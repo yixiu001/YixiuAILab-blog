@@ -348,7 +348,12 @@ async function handleComments(request, env, url) {
     // 写链路全部走主库：署名读、防刷计数、插入、写后读取都必须强一致
     const W = writeDB(env);
     const user = await currentUser(request, env, true);
-    const name = user ? user.login : (cleanText(body.name, 24) || '匿名访客');
+    // 只允许已登录的 GitHub 用户发表评论。前端闸门只是提示，这里才是真正的鉴权边界：
+    // 直接 POST 接口绕过页面的请求同样会被拒绝，且不再接受客户端自报昵称。
+    if (!user) {
+      return reply({ ok: false, error: 'login_required' }, 401, request, env);
+    }
+    const name = user.login;
     if (!path.startsWith('/') || !content) {
       return reply({ ok: false, error: 'invalid_input' }, 400, request, env);
     }

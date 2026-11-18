@@ -14,3 +14,6 @@ _multiconfig.yml
 .dev.vars
 .dev.vars.*
 .wrangler/
+
+# 统一使用 npm，避免 Cloudflare 误选 Yarn Berry
+yarn.lock

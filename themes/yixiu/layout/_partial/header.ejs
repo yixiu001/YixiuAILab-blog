@@ -5,8 +5,25 @@
       <span class="logo-txt"><%= theme.logo %></span>
     </a>
     <nav class="nav">
+      <%
+        // 当前页路径（相对站点根，统一带首尾斜杠）；首页 page.path 为 index.html
+        var navPath = '/' + String(page.path || '').replace(/^\/+/, '');
+        if (navPath === '/index.html') navPath = '/';
+        function navActive(item){
+          // 向下兼容：未配置 match 的旧数据仍用 active 字段
+          if (!item.match) return !!item.active;
+          var hit = false;
+          (item.match || []).some(function(prefix){
+            var p = '/' + String(prefix).replace(/^\/+/, '').replace(/\/$/, '');
+            if (p === '') { if (navPath === '/') hit = true; }        // 首页：精确匹配
+            else if (navPath === p || navPath.indexOf(p + '/') === 0) hit = true;
+            return hit;
+          });
+          return hit;
+        }
+      %>
       <% theme.nav.forEach(function(item){ %>
-      <a href="<%= url_for(item.url) %>" class="<%= item.active ? 'active' : '' %>"><%= item.text %></a>
+      <a href="<%= url_for(item.url) %>" class="<%= navActive(item) ? 'active' : '' %>"><%= item.text %></a>
       <% }); %>
     </nav>
     <div class="nav-right">

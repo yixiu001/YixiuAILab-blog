@@ -7,12 +7,14 @@ logo: 一休AI实验室
 logo_image: /images/avatar.jpg
 
 # 顶部导航
+# 导航：match 为高亮匹配路径前缀（当前页命中任一前缀即高亮）
+# 首页用 "/" 精确匹配本身；文章详情归到「文章」，工具详情归到「资源」
 nav:
-  - { text: 首页, url: /, active: true }
-  - { text: 课程, url: /courses/ }
-  - { text: 文章, url: /archives/ }
-  - { text: 资源, url: /resources/ }
-  - { text: 关于, url: /about/ }
+  - { text: 首页, url: /, match: [/] }
+  - { text: 课程, url: /courses/, match: [/courses/] }
+  - { text: 文章, url: /archives/, match: [/archives/, /posts/, /categories/, /tags/] }
+  - { text: 资源, url: /resources/, match: [/resources/, /tools/] }
+  - { text: 关于, url: /about/, match: [/about/] }
 
 subscribe_text: 订阅频道
 subscribe_url: https://www.youtube.com/@YixiuAILab

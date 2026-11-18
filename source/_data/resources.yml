@@ -1,0 +1,215 @@
+# --------------------------------------------------
+# 工具导航数据源（资源页 /resources/ 单一数据源）
+# 结构：groups[] -> { name, icon, desc, items[] }
+#       items[] -> { id, name, url, icon, desc, detail, tags[], featured(可选) }
+# 说明：id 用于生成工具详情页 /tools/<id>/，英文小写+连字符，务必唯一。
+#       detail 是详情页正文简介。新增工具只需在这里加一条：
+#       导航页与详情页都会自动生成，无需改模板。
+# --------------------------------------------------
+
+groups:
+  - name: AI 对话与创作
+    icon: "🤖"
+    desc: "主力大模型与对话助手，写作、编程、学习全能搭档"
+    items:
+      - id: chatgpt
+        name: ChatGPT
+        url: "https://chat.openai.com/"
+        icon: "💬"
+        desc: "OpenAI 官方对话助手，写作、编程、学习全能"
+        detail: "由 OpenAI 推出的对话式 AI 助手，支持文字、图片与文件交流。适合日常写作、头脑风暴、代码辅助和知识查询，是使用门槛最低的通用大模型之一。免费版即可体验核心能力，进阶功能需订阅 Plus。"
+        tags: ["对话", "写作", "编程"]
+        featured: true
+      - id: claude
+        name: Claude
+        url: "https://claude.ai/"
+        icon: "🧠"
+        desc: "Anthropic 出品，擅长长文本理解与代码"
+        detail: "Anthropic 公司开发的 AI 助手，以长文本理解、细腻写作和代码能力见长。处理长篇文档、论文总结、复杂推理类任务时表现稳定，适合对文字质量要求较高的创作者与开发者。"
+        tags: ["长文本", "代码"]
+        featured: true
+      - id: gemini
+        name: Gemini
+        url: "https://gemini.google.com/"
+        icon: "✨"
+        desc: "Google 多模态助手，与 Google 生态深度整合"
+        detail: "Google 推出的多模态 AI 助手，可处理文字、图片、音频与视频内容，并与 Gmail、Google 文档等服务打通。如果你重度使用 Google 生态，它能显著减少复制粘贴的步骤。"
+        tags: ["多模态", "Google"]
+      - id: deepseek
+        name: DeepSeek
+        url: "https://www.deepseek.com/"
+        icon: "🐋"
+        desc: "国产开源大模型，推理强、速度快、免费可用"
+        detail: "深度求索（DeepSeek）推出的国产大模型，推理与数学能力突出，且模型开源、使用免费。支持深度思考模式，适合逻辑推理、代码编写和中文场景，是性价比很高的日常主力模型。"
+        tags: ["国产", "推理", "免费"]
+        featured: true
+      - id: kimi
+        name: Kimi
+        url: "https://www.kimi.com/"
+        icon: "🌙"
+        desc: "月之暗面出品，超长文本处理与联网检索"
+        detail: "月之暗面推出的智能助手，主打超长上下文与联网搜索。可以直接扔进多份长文档让它归纳对比，也适合需要实时信息的研究型任务，中文阅读体验友好。"
+        tags: ["长文本", "联网"]
+      - id: tongyi-qianwen
+        name: 通义千问
+        url: "https://tongyi.aliyun.com/"
+        icon: "🪶"
+        desc: "阿里通义系列大模型，中文场景表现稳定"
+        detail: "阿里云推出的通义千问系列模型，覆盖对话、写作、绘图与代码等多种能力。中文语境理解自然，与阿里生态结合紧密，适合国内用户作为稳定的日常 AI 工具使用。"
+        tags: ["国产", "阿里"]
+
+  - name: AI 工具与平台
+    icon: "🧰"
+    desc: "本地客户端、模型社区与搜索工具，把 AI 真正用起来"
+    items:
+      - id: cherry-studio
+        name: Cherry Studio
+        url: "https://www.cherry-ai.com/"
+        icon: "🍒"
+        desc: "本地多模型客户端，统一管理各家模型接口"
+        detail: "一款开源免费的本地 AI 客户端，可在一个界面里统一管理 OpenAI、Claude、DeepSeek 等多家模型的 API。支持知识库、对话管理与多模型对比，是课程中重点演示的工具，适合想把各家模型集中管理的人。"
+        tags: ["客户端", "多模型"]
+        featured: true
+      - id: huggingface
+        name: HuggingFace
+        url: "https://huggingface.co/"
+        icon: "🤗"
+        desc: "全球最大开源模型与数据集社区"
+        detail: "全球最大的开源 AI 社区，托管了海量的预训练模型、数据集与 Space 应用。无论是查找可商用模型、下载数据集，还是了解前沿研究，这里都是 AI 从业者的第一站。"
+        tags: ["模型", "开源", "社区"]
+      - id: huggingface-spaces
+        name: HuggingFace Spaces
+        url: "https://huggingface.co/spaces"
+        icon: "🚀"
+        desc: "免费应用托管，16G 内存可跑 Gradio / Streamlit"
+        detail: "HuggingFace 提供的免费应用托管空间，支持 Gradio 与 Streamlit 快速搭建并公开 AI 应用。免费额度即可获得相当可观的内存与算力，非常适合部署 Demo、作品集和轻量级 AI 工具。"
+        tags: ["托管", "免费", "部署"]
+        featured: true
+      - id: perplexity
+        name: Perplexity
+        url: "https://www.perplexity.ai/"
+        icon: "🔍"
+        desc: "带来源引用的 AI 搜索引擎，查资料效率高"
+        detail: "一款 AI 驱动的搜索引擎，回答时会附带可点击的来源引用，方便核对信息真伪。适合做资料调研、事实核查和快速了解一个陌生主题，比传统搜索更省去逐条点开网页的时间。"
+        tags: ["搜索", "研究"]
+
+  - name: 建站与部署
+    icon: "🌐"
+    desc: "从代码托管到免费部署，零成本搭建你的网站"
+    items:
+      - id: github
+        name: GitHub
+        url: "https://github.com/"
+        icon: "🐙"
+        desc: "全球最大代码托管平台，开源项目聚集地"
+        detail: "全球最大的代码托管与协作平台，用 Git 管理版本、托管开源项目、追踪问题与协作开发。本博客的源码和各路开源主题都托管在这里，是开发者绕不开的基础设施。"
+        tags: ["代码", "托管"]
+        featured: true
+      - id: github-pages
+        name: GitHub Pages
+        url: "https://pages.github.com/"
+        icon: "📄"
+        desc: "免费静态站托管，配合 Hexo 搭建个人博客"
+        detail: "GitHub 提供的免费静态网站托管服务，可直接从仓库发布页面，并支持自定义域名与 HTTPS。配合 Hexo 等静态站点生成器，可以零成本搭建个人博客，本站正是采用这套方案。"
+        tags: ["静态站", "免费"]
+      - id: vercel
+        name: Vercel
+        url: "https://vercel.com/"
+        icon: "▲"
+        desc: "免费部署平台，支持静态站与 Serverless"
+        detail: "面向前端的部署平台，连接代码仓库后即可自动构建与发布，支持静态站点与 Serverless 函数。拥有全球 CDN 和预览部署能力，个人项目有相当充裕的免费额度。"
+        tags: ["部署", "免费"]
+      - id: netlify
+        name: Netlify
+        url: "https://www.netlify.com/"
+        icon: "🌐"
+        desc: "静态站部署与表单、函数一体化平台"
+        detail: "老牌静态站部署平台，除托管外还内置表单处理、边缘函数与分站测试等功能。工作流成熟、文档完善，适合需要一点点动态能力又不想自己管服务器的场景。"
+        tags: ["部署", "静态站"]
+      - id: cloudflare
+        name: Cloudflare
+        url: "https://www.cloudflare.com/"
+        icon: "☁️"
+        desc: "免费 CDN、DNS 与基础防护，建站必备"
+        detail: "提供 CDN 加速、DNS 解析、SSL 证书与基础 DDoS 防护的云服务，免费版已足够个人站点使用。给网站套上 Cloudflare 通常能明显提升访问速度，同时隐藏源站 IP。"
+        tags: ["CDN", "DNS", "免费"]
+        featured: true
+
+  - name: 账号与支付
+    icon: "💳"
+    desc: "海外服务基础账号与支付工具，注册流程见同名教程"
+    items:
+      - id: google-gmail
+        name: Google / Gmail
+        url: "https://mail.google.com/"
+        icon: "📧"
+        desc: "海外服务基础账号，注册流程见同名视频教程"
+        detail: "Google 账号是使用 YouTube、Gmail、Google Drive 等海外服务的基础，也是注册许多 AI 工具的前提。本站有对应的视频讲义，演示国内手机号环境下的注册要点与常见验证问题的处理思路。"
+        tags: ["账号", "邮箱"]
+        featured: true
+      - id: apple-id
+        name: 美区 AppleID
+        url: "https://appleid.apple.com/"
+        icon: "🍎"
+        desc: "下载国区没有的 App，注册全流程见视频教程"
+        detail: "美区 Apple ID 可用于下载仅在美区 App Store 上架的应用。本站视频讲义完整演示了从注册到使用的流程，并说明常见的验证环节注意事项，操作请以官方最新规则为准。"
+        tags: ["账号", "Apple"]
+      - id: biyapay
+        name: BiyaPay
+        url: "https://www.biyapay.com/"
+        icon: "💳"
+        desc: "海外支付与充值，免费 U 卡可给 AI 服务付款"
+        detail: "面向海外支付的账户服务，提供虚拟卡与充值能力，可用于给 ChatGPT、API 平台等海外服务付款。本站视频讲义演示了注册、实名、开卡与充值的完整流程，涉及资金请自行评估风险。"
+        tags: ["支付", "U卡"]
+        featured: true
+      - id: paypal
+        name: PayPal
+        url: "https://www.paypal.com/"
+        icon: "🅿️"
+        desc: "国际通用在线支付，海外服务付款常用"
+        detail: "国际广泛使用的在线支付工具，许多海外网站与服务都支持 PayPal 付款。适合在没有本地银行卡的情况下完成境外订阅与购物，具体可用范围以各商户支持情况为准。"
+        tags: ["支付", "国际"]
+
+  - name: 效率与生产力
+    icon: "⚡"
+    desc: "笔记、文档与协作工具，让知识沉淀更轻松"
+    items:
+      - id: notion
+        name: Notion
+        url: "https://www.notion.so/"
+        icon: "📝"
+        desc: "集笔记、文档、数据库于一体的全能知识库"
+        detail: "把笔记、文档、数据库与看板整合在一起的生产力工具，模板生态丰富。适合搭建个人知识库、项目管理和内容规划系统，免费版对个人使用已经相当够用。"
+        tags: ["笔记", "协作"]
+      - id: obsidian
+        name: Obsidian
+        url: "https://obsidian.md/"
+        icon: "💎"
+        desc: "本地双链笔记，适合构建个人知识体系"
+        detail: "基于本地 Markdown 文件的双链笔记工具，数据完全掌握在自己手里，并通过插件扩展出丰富能力。适合长期沉淀知识体系、重视数据主权与离线可用的用户。"
+        tags: ["笔记", "双链"]
+      - id: feishu
+        name: 飞书
+        url: "https://www.feishu.cn/"
+        icon: "🪁"
+        desc: "团队协作与文档套件，免费版功能已足够强"
+        detail: "字节跳动推出的企业协作套件，整合即时沟通、在线文档、表格、日历与多维表格。文档能力突出、免费版功能完整，适合小团队和个人做项目协作与资料沉淀。"
+        tags: ["协作", "文档"]
+
+# --------------------------------------------------
+# 友情链接（已并入资源页 /resources/#friends，不再有独立友链页）
+# 说明：links 为空时页面显示「虚位以待 + 交换友链说明」，不编造任何友链。
+#       以后加友链，只需在 links 下加一条，资源页自动渲染卡片：
+#         - name: 站点名称
+#           url: "https://example.com"
+#           icon: "🔗"        # emoji 或单字，留空自动取名称首字
+#           desc: "一句话简介"
+# --------------------------------------------------
+friends:
+  intro: "认识的同好博客和频道，欢迎互相串门。"
+  apply_note: "想交换友链的话，欢迎通过频道私信我，附上以下信息，我会尽快加上："
+  requirements:
+    - 站点名称与简介
+    - 站点地址
+    - 头像或 Logo（可选）
+  links: []

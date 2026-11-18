@@ -1,0 +1,82 @@
+<%
+  // 课程中心：自动列出 courses.yml 中的全部课程，新增课程无需改模板
+  var courses = site.data.courses || [];
+  var totalLessons = 0, totalCourses = courses.length;
+  courses.forEach(function(c){
+    (c.chapters || []).forEach(function(g){ totalLessons += (g.items || []).length; });
+  });
+  // 从课程数据自动生成分类（保持首次出现顺序）
+  var categories = [];
+  courses.forEach(function(c){ var cat = c.category || '未分类'; if(categories.indexOf(cat) < 0) categories.push(cat); });
+  var multiCat = categories.length > 1;
+%>
+<div class="wrap">
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><%= page.title %></div>
+  <section class="simple-head">
+    <h1><%= page.title %></h1>
+    <% if(page.description){ %><p><%= page.description %></p><% } %>
+    <div class="hub-summary"><span><b><%= totalCourses %></b> 门课程</span><span class="dot"></span><span><b><%= totalLessons %></b> 节内容</span><span class="dot"></span><span>持续更新中</span></div>
+  </section>
+
+  <% if(!courses.length){ %>
+  <div class="v2empty">还没有课程。在 <code>source/_data/courses.yml</code> 中添加一门课即可自动出现在这里。</div>
+  <% } else { %>
+
+  <!-- 分类筛选条：按 courses.yml 的 category 自动生成 -->
+  <% if(multiCat){ %>
+  <div class="hub-filter" id="hub-filter" role="group" aria-label="按分类筛选课程">
+    <button class="hub-chip on" data-cat="all" type="button">全部 <span><%= totalCourses %></span></button>
+    <% categories.forEach(function(cat){
+      var n = courses.filter(function(c){ return (c.category || '未分类') === cat; }).length;
+    %>
+    <button class="hub-chip" data-cat="<%= cat %>" type="button"><%= cat %> <span><%= n %></span></button>
+    <% }); %>
+  </div>
+  <% } %>
+
+  <!-- 课程卡片：一屏多门，章节目录默认折叠 -->
+  <div class="hub-grid" id="hub-grid">
+  <% courses.forEach(function(c, ci){ %>
+  <% var cnt = 0, first = null; %>
+  <% (c.chapters || []).forEach(function(g){ (g.items || []).forEach(function(it){ cnt++; if(!first) first = it; }); }); %>
+  <article class="hub-course" id="<%= c.id %>" data-cat="<%= c.category || '未分类' %>">
+    <div class="hub-media">
+      <% if(c.cover){ %>
+      <img src="<%= url_for(c.cover) %>" alt="<%= c.title %>" loading="lazy">
+      <% } else { %>
+      <div class="hub-media-empty"><span>▦</span><small>图文讲义课</small></div>
+      <% } %>
+      <% if(c.category){ %><span class="hub-media-cat"><%= c.category %></span><% } %>
+      <span class="hub-media-count"><%= cnt %> 节</span>
+    </div>
+    <div class="hub-body">
+      <h2><%= c.short || c.title %></h2>
+      <p class="hub-desc"><%= c.desc %></p>
+      <div class="hub-meta">
+        <% if(c.hours){ %><span>约 <%= c.hours %> 小时</span><% } %>
+        <% if(c.level){ %><span><%= c.level %></span><% } %>
+        <% if(c.teacher){ %><span><%= c.teacher %></span><% } %>
+      </div>
+      <div class="hub-actions">
+        <% if(first){ %><a href="<%= url_for(first.path) %>" class="hub-cta-btn">开始学习 <span>→</span></a><% } %>
+        <button class="hub-toggle" type="button" aria-expanded="false" aria-controls="chapters-<%= c.id %>">查看目录 <span class="hub-toggle-arrow">⌄</span></button>
+      </div>
+    </div>
+    <div class="hub-chapters" id="chapters-<%= c.id %>" hidden>
+      <% (c.chapters || []).forEach(function(g){ %>
+      <div class="hub-group"><%= g.group %></div>
+      <div class="hub-list">
+        <% (g.items || []).forEach(function(it){ %>
+        <a href="<%= it.path ? url_for(it.path) : '#' %>" class="hub-item"><span class="hub-i-no"><%= ('0'+it.chapter).slice(-2) %></span><span class="hub-i-t"><%= it.title %></span><span class="hub-i-d"><%= it.duration %></span><span class="hub-i-go">→</span></a>
+        <% }); %>
+      </div>
+      <% }); %>
+    </div>
+  </article>
+  <% }); %>
+  </div>
+
+  <div id="hub-empty" class="v2empty" hidden>该分类下暂时没有课程。</div>
+  <div class="hub-tip">课程与文章分属独立板块：<a href="<%= url_for('/archives/') %>">浏览全部文章 →</a></div>
+  <% } %>
+</div>

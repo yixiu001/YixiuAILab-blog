@@ -1,0 +1,261 @@
+<%
+  // 评论区组件（文章页 + 课程章节页共用）
+  // 静态站点没有后端，评论依赖外部服务。配置集中在 themes/yixiu/_config.yml 的 comments 段。
+  // provider: cloudflare（自建 Workers + D1，推荐）/ giscus / twikoo / waline
+  // 未配置凭证 → 显示「待接入」提示，不伪造评论、不伪装可提交。
+  var cm = theme.comments || {};
+  var cmProvider = String(cm.provider || 'cloudflare').toLowerCase();
+  var cf = cm.cloudflare || {};
+  var g  = cm.giscus || {};
+  var tk = cm.twikoo || {};
+  var wa = cm.waline || {};
+
+  var cfReady = !!String(cf.api || '').trim();
+  var gReady  = !!(String(g.repo || '').trim() && String(g.repo_id || '').trim() && String(g.category_id || '').trim());
+  var tkReady = !!String(tk.env_id || '').trim();
+  var waReady = !!String(wa.server_url || '').trim();
+  var cmReady = cm.enable === true && (
+    (cmProvider === 'cloudflare' && cfReady) ||
+    (cmProvider === 'giscus' && gReady) ||
+    (cmProvider === 'twikoo' && tkReady) ||
+    (cmProvider === 'waline' && waReady)
+  );
+
+  // 把配置安全注入前端脚本（避免 </script> 截断）
+  function jsLit(v){ return JSON.stringify(String(v == null ? '' : v)).replace(/</g, '\\u003c'); }
+%>
+<section class="cm-block" id="comments">
+  <div class="cm-head">
+    <span class="cm-ic" aria-hidden="true">&#128172;</span>
+    <div class="cm-head-tx">
+      <h2>评论</h2>
+      <p>有疑问、勘误或想聊的，欢迎在下面留言</p>
+    </div>
+  </div>
+
+  <% if(cmReady && cmProvider === 'cloudflare'){ %>
+  <!-- Cloudflare Workers + D1：前端直连自建 API，数据在自己手里 -->
+  <div class="cm-body">
+    <form class="cm-form" id="cm-form" autocomplete="off">
+      <div class="cm-form-row">
+        <input class="cm-input" id="cm-name" type="text" maxlength="24" placeholder="你的昵称（选填）" aria-label="昵称">
+        <span class="cm-hint" id="cm-name-hint">不填则显示为「匿名访客」</span>
+      </div>
+      <textarea class="cm-textarea" id="cm-content" maxlength="500" rows="3" placeholder="说点什么吧…（支持纯文本，最多 500 字）" aria-label="评论内容" required></textarea>
+      <div class="cm-form-foot">
+        <span class="cm-count" id="cm-count">0 / 500</span>
+        <button class="cm-submit" id="cm-submit" type="submit">发表评论</button>
+      </div>
+    </form>
+    <div class="cm-status" id="cm-status"></div>
+    <div class="cm-list" id="cm-list"></div>
+  </div>
+  <script>
+  (function(){
+    var API = <%- jsLit(cf.api) %>.replace(/\/+$/, '') + '/api/comments';
+    var PAGE = location.pathname;
+    var form = document.getElementById('cm-form');
+    var nameEl = document.getElementById('cm-name');
+    var contentEl = document.getElementById('cm-content');
+    var countEl = document.getElementById('cm-count');
+    var statusEl = document.getElementById('cm-status');
+    var listEl = document.getElementById('cm-list');
+    var submitEl = document.getElementById('cm-submit');
+    var nameRow = nameEl.parentNode;
+    var nameHint = document.getElementById('cm-name-hint');
+    if(!API || !form) return;
+
+    // GitHub 登录态：登录后评论自动署名，昵称框让位给身份提示
+    var authUser = null;
+    function applyAuth(user){
+      authUser = user || null;
+      if(authUser){
+        nameRow.style.display = 'none';
+        var tip = document.getElementById('cm-auth-tip');
+        if(!tip){
+          tip = el('div', 'cm-auth-tip');
+          tip.id = 'cm-auth-tip';
+          form.insertBefore(tip, form.firstChild);
+        }
+        tip.innerHTML = '';
+        var av = document.createElement('img');
+        av.className = 'cm-auth-av';
+        av.src = authUser.avatar_url || '';
+        av.alt = '';
+        var tx = document.createElement('span');
+        tx.appendChild(el('b', '', '@' + authUser.login));
+        tx.appendChild(document.createTextNode(' · 评论将以 GitHub 身份发布'));
+        tip.appendChild(av);
+        tip.appendChild(tx);
+      }else{
+        nameRow.style.display = '';
+        var old = document.getElementById('cm-auth-tip');
+        if(old) old.parentNode.removeChild(old);
+      }
+    }
+    if(window.YixiuAuth && window.YixiuAuth.state && window.YixiuAuth.state.ready){
+      applyAuth(window.YixiuAuth.state.user);
+    }
+    document.addEventListener('yixiu:auth', function(e){
+      var changed = (e.detail && e.detail.user || null) !== authUser;
+      applyAuth(e.detail && e.detail.user);
+      if(changed && stateReady()) load();   // 登录态变化后重载，带上 GitHub 身份
+    });
+    function stateReady(){
+      return !!(window.YixiuAuth && window.YixiuAuth.state && window.YixiuAuth.state.ready);
+    }
+
+    function setStatus(msg, kind){
+      statusEl.textContent = msg || '';
+      statusEl.className = 'cm-status' + (kind ? ' ' + kind : '');
+      statusEl.style.display = msg ? 'block' : 'none';
+    }
+    function el(tag, cls, text){
+      var n = document.createElement(tag);
+      if(cls) n.className = cls;
+      if(text != null) n.textContent = text;   // 一律 textContent，天然防 XSS
+      return n;
+    }
+    function timeText(s){
+      s = String(s || '');
+      return s.length >= 16 ? s.slice(0, 16).replace('T', ' ') + ' (UTC)' : s;
+    }
+    function render(items){
+      listEl.innerHTML = '';
+      if(!items || !items.length){
+        var empty = el('div', 'cm-empty');
+        empty.appendChild(el('span', 'cm-empty-ic', '💬'));
+        empty.appendChild(el('p', 'cm-empty-t', '还没有评论，来坐沙发吧'));
+        listEl.appendChild(empty);
+        return;
+      }
+      var h = el('div', 'cm-list-head', '共 ' + items.length + ' 条评论');
+      listEl.appendChild(h);
+      items.forEach(function(it){
+        var card = el('div', 'cm-item');
+        var av;
+        if(it.github_avatar){
+          av = document.createElement('img');
+          av.className = 'cm-av cm-av-img';
+          av.src = it.github_avatar;
+          av.alt = '';
+          av.referrerPolicy = 'no-referrer';
+        }else{
+          av = el('span', 'cm-av', String(it.name || '匿').trim().charAt(0).toUpperCase());
+        }
+        var body = el('div', 'cm-item-body');
+        var top = el('div', 'cm-item-top');
+        top.appendChild(el('b', 'cm-item-name', it.name || '匿名访客'));
+        if(it.github_login){
+          var badge = el('a', 'cm-gh-badge', 'GitHub');
+          badge.href = 'https://github.com/' + encodeURIComponent(it.github_login);
+          badge.target = '_blank';
+          badge.rel = 'noopener noreferrer';
+          top.appendChild(badge);
+        }
+        top.appendChild(el('span', 'cm-item-time', timeText(it.created_at)));
+        body.appendChild(top);
+        body.appendChild(el('p', 'cm-item-tx', it.content));
+        card.appendChild(av);
+        card.appendChild(body);
+        listEl.appendChild(card);
+      });
+    }
+    function load(){
+      setStatus('正在加载评论…');
+      // 未登录时不带凭证：兼容尚未升级的后端，也避免无谓的跨域凭证请求
+      var opt = { method:'GET' };
+      if(authUser) opt.credentials = 'include';
+      fetch(API + '?path=' + encodeURIComponent(PAGE), opt)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(!d || !d.ok) throw new Error(d && d.error || 'bad_response');
+          render(d.items);
+          setStatus('');
+        })
+        .catch(function(){ setStatus('评论服务暂时连不上，请稍后再试。', 'err'); });
+    }
+    contentEl.addEventListener('input', function(){
+      countEl.textContent = contentEl.value.length + ' / 500';
+    });
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var content = contentEl.value.trim();
+      if(!content){ setStatus('评论内容不能为空。', 'err'); return; }
+      submitEl.disabled = true;
+      submitEl.textContent = '提交中…';
+      setStatus('');
+      var postOpt = {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          path: PAGE,
+          name: authUser ? '' : nameEl.value.trim(),
+          content: content
+        })
+      };
+      if(authUser) postOpt.credentials = 'include';
+      fetch(API, postOpt)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(!d || !d.ok) throw new Error(d && d.error || 'bad_response');
+          contentEl.value = '';
+          countEl.textContent = '0 / 500';
+          load();
+        })
+        .catch(function(err){
+          setStatus(err && err.message === 'rate_limited' ? '发得太快啦，歇一会儿再发。' : '提交失败，请稍后再试。', 'err');
+        })
+        .then(function(){
+          submitEl.disabled = false;
+          submitEl.textContent = '发表评论';
+        });
+    });
+    load();
+  })();
+  </script>
+
+  <% } else if(cmReady && cmProvider === 'giscus'){ %>
+  <div class="cm-body">
+    <script src="https://giscus.app/client.js"
+      data-repo="<%= String(g.repo).trim() %>"
+      data-repo-id="<%= String(g.repo_id).trim() %>"
+      data-category="<%= String(g.category || 'General').trim() %>"
+      data-category-id="<%= String(g.category_id).trim() %>"
+      data-mapping="<%= String(g.mapping || 'pathname').trim() %>"
+      data-strict="0"
+      data-reactions-enabled="<%= g.reactions === false ? '0' : '1' %>"
+      data-emit-metadata="0"
+      data-input-position="top"
+      data-theme="light"
+      data-lang="<%= String(g.lang || 'zh-CN').trim() %>"
+      data-loading="lazy"
+      crossorigin="anonymous" async></script>
+  </div>
+
+  <% } else if(cmReady && cmProvider === 'twikoo'){ %>
+  <div class="cm-body" id="cm-body"></div>
+  <script src="<%= String(tk.cdn || 'https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.min.js').trim() %>"></script>
+  <script>
+    var TW_ENV = <%- jsLit(tk.env_id) %>;
+    if(window.twikoo){ twikoo.init({ envId:TW_ENV, el:'#cm-body', lang:'zh-CN' }); }
+  </script>
+
+  <% } else if(cmReady && cmProvider === 'waline'){ %>
+  <link rel="stylesheet" href="<%= String(wa.css || 'https://unpkg.com/@waline/client@v3/dist/waline.css').trim() %>">
+  <div class="cm-body" id="cm-body"></div>
+  <script type="module">
+    var WA_CDN = <%- jsLit(wa.cdn || 'https://unpkg.com/@waline/client@v3/dist/waline.js') %>;
+    var WA_URL = <%- jsLit(wa.server_url) %>;
+    import(WA_CDN).then(function(m){ m.init({ el:'#cm-body', serverURL:WA_URL, lang:'zh-CN' }); });
+  </script>
+
+  <% } else { %>
+  <div class="cm-pending">
+    <div class="cm-pending-ic" aria-hidden="true">&#128172;</div>
+    <div class="cm-pending-t">评论区待接入</div>
+    <p class="cm-pending-d">本站是静态站点，评论需要接入后端服务。推荐用 <b>Cloudflare Workers + D1</b> 自建（免费额度够用、数据自己掌握），部署后把 API 地址填进主题配置的 <code>comments</code> 段即可启用。</p>
+    <div class="cm-pending-tags"><span>Cloudflare</span><span>Giscus</span><span>Twikoo</span><span>Waline</span></div>
+  </div>
+  <% } %>
+</section>

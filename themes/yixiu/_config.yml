@@ -1,0 +1,109 @@
+# --------------------------------------------------
+# 一休定制主题 · 配置
+# --------------------------------------------------
+
+# 站点 Logo（头像图片 + 名称）
+logo: 一休AI实验室
+logo_image: /images/avatar.jpg
+
+# 顶部导航
+nav:
+  - { text: 首页, url: /, active: true }
+  - { text: 课程, url: /courses/ }
+  - { text: 文章, url: /archives/ }
+  - { text: 资源, url: /resources/ }
+  - { text: 关于, url: /about/ }
+
+subscribe_text: 订阅频道
+subscribe_url: https://www.youtube.com/@YixiuAILab
+
+# --------------------------------------------------
+# 首页 v2：课程 + 文章知识门户（不含 YouTube 视频内容）
+# 说明：统计数字（课程节数/文章数/章节数）由首页模板从站点内容实时计算，不写死。
+#       视频讲义已并入文章板块（/archives/），用「视频」标签区分，不再有独立视频页。
+# --------------------------------------------------
+v2:
+  hero:
+    badge: AI 实战 · 图文讲义 · 持续更新
+    title: 把 AI 工具，变成你的生产力
+    subtitle: 你好，我是一休。这里沉淀我的体系化课程与图文教程——从环境搭建到实战落地，每一步都有可查阅的讲义。
+    primary_btn: { text: 开始学习课程, url: /courses/ }
+    secondary_btn: { text: 浏览文章, url: /archives/ }
+  course:  # 仅当 courses.yml 为空时兜底，日常课程信息请改 source/_data/courses.yml
+    tag: 精选课程
+    title: 从零打造 AI 应用 · 完整实战课
+    desc: 一门把 AI 工具串起来的体系化课程。从环境准备、模型接入到知识库、工作流与部署发布，12 节带你做出自己的第一个 AI 应用。每节配图文讲义，随时回看。
+    hours: 4.5
+    level: 入门到实战
+    highlights:
+      - 大模型 API 申请与费用控制
+      - Cherry Studio 本地部署与模型接入
+      - 知识库、工作流与多模态实战
+      - 打包部署与结业项目
+
+# --------------------------------------------------
+# 博主订阅区
+# --------------------------------------------------
+creator:
+  avatar_text: 休
+  name: 一休AI实验室 · 科技分享博主
+  desc: 专注 AI 工具、免费资源与效率技巧。把体系化课程和教程沉淀成图文，方便你随时查阅、随时落地。
+  btn_text: 订阅频道
+  btn_url: https://www.youtube.com/@YixiuAILab
+  channels:
+    - { name: YouTube, icon: ▶, url: https://www.youtube.com/@YixiuAILab, class: yt }
+    - { name: Telegram 频道, icon: ✈, url: https://t.me, class: tg }
+    - { name: GitHub 仓库, icon: ⌥, url: https://github.com, class: gh }
+
+# --------------------------------------------------
+# 评论区（文章页 + 课程章节页）
+# 静态站点无后端，评论需接外部服务；未配置时页面显示「待接入」，不伪造评论。
+# 推荐 cloudflare：项目根目录 cloudflare/comments/ 是可直接部署的 Workers + D1 模板。
+# 启用步骤：部署 Worker → 把 API 地址填入 cloudflare.api → enable 改 true
+# --------------------------------------------------
+comments:
+  enable: true
+  provider: cloudflare   # cloudflare | giscus | twikoo | waline
+  cloudflare:
+    api: "https://api.yixiu521.com"   # 已部署的 Worker 自定义域名（见 cloudflare/comments/）
+  giscus:
+    repo: ""             # owner/repo（公开仓库，已开启 Discussions）
+    repo_id: ""          # 在 https://giscus.app/zh-CN 生成
+    category: General
+    category_id: ""
+    mapping: pathname
+    reactions: true
+    lang: zh-CN
+  twikoo:
+    env_id: ""           # 腾讯云 CloudBase 环境 ID 或自建服务地址
+    cdn: "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.min.js"
+  waline:
+    server_url: ""       # 例：https://waline.xxx.vercel.app
+    cdn: "https://unpkg.com/@waline/client@v3/dist/waline.js"
+    css: "https://unpkg.com/@waline/client@v3/dist/waline.css"
+
+# --------------------------------------------------
+# 全站 GitHub 登录（导航头像 + 评论区身份）
+# 依赖 cloudflare/comments Worker；未配置 OAuth 凭证时自动隐藏入口。
+# 凭证通过 Worker Secret 设置，不写在本文件：
+#   .\cf.ps1 secret put GITHUB_CLIENT_ID
+#   .\cf.ps1 secret put GITHUB_CLIENT_SECRET
+# --------------------------------------------------
+auth:
+  enable: true
+  api: "https://api.yixiu521.com"
+
+# 页脚
+footer:
+  note: 分享好工具，让知识免费流动
+  powered: Powered by Hexo
+
+# --------------------------------------------------
+# 课程兼容配置：已由 source/_data/courses.yml 取代，仅作旧数据兜底
+# 新增/修改课程请编辑 source/_data/courses.yml（多课程单一数据源）
+# --------------------------------------------------
+course:
+  id: ai-app
+  title: 从零打造 AI 应用：完整实战课程
+  total: 12
+  channels: ''

@@ -1,0 +1,50 @@
+# 由 scripts/sync-youtube.js 自动生成，请勿手动编辑
+# 数据来源：YouTube 频道 @YixiuAILab
+# 同步时间：2026-11-18 09:21 UTC
+channel:
+  id: YixiuAILab
+  name: 一休AI实验室
+  url: https://www.youtube.com/@YixiuAILab
+  subscribers: 12800
+  subscribersText: "1.28万"
+  videoCount: 4
+  totalViews: 11444
+  totalViewsText: "11,444"
+  joined: "2023年9月29日注册"
+videos:
+  - id: kTVRMm4J5pw
+    title: "BiyaPay 海外支付、ChatGPT充值一站解决！免费U卡+最高14U奖励"
+    views: 438
+    viewsText: "438"
+    published: "4个月前"
+    category: "支付充值"
+    url: "/posts/biyapay/"
+    youtube: "https://www.youtube.com/watch?v=kTVRMm4J5pw"
+    cover: "/images/videos/kTVRMm4J5pw.jpg"
+  - id: 2XJUSpqGRWE
+    title: "【2026最新】Google 账号与 Gmail 邮箱注册全流程详细讲解，跳过扫码环节，绕过 Google 反作弊，国内 + 86 手机号也能正常注册"
+    views: 1865
+    viewsText: "1865"
+    published: "7个月前"
+    category: "账号教程"
+    url: "/posts/google-account/"
+    youtube: "https://www.youtube.com/watch?v=2XJUSpqGRWE"
+    cover: "/images/videos/2XJUSpqGRWE.jpg"
+  - id: h9PJK64By4E
+    title: "【2026最新】美区 AppleID 注册全流程演示，100% 成功！从失败到一次通关"
+    views: 1856
+    viewsText: "1856"
+    published: "7个月前"
+    category: "海外工具"
+    url: "/posts/apple-id/"
+    youtube: "https://www.youtube.com/watch?v=h9PJK64By4E"
+    cover: "/images/videos/h9PJK64By4E.jpg"
+  - id: -Lj0qYi_C6Q
+    title: "【2025年最新】Telegram账号怎么买？亲测购买+登录教程"
+    views: 7285
+    viewsText: "7285"
+    published: "11个月前"
+    category: "账号教程"
+    url: "/posts/tg-account/"
+    youtube: "https://www.youtube.com/watch?v=-Lj0qYi_C6Q"
+    cover: "/images/videos/-Lj0qYi_C6Q.jpg"

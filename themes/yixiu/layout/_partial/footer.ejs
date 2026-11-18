@@ -1,0 +1,18 @@
+<footer class="footer">
+  <div class="wrap">
+    <div class="top">
+      <a href="<%= url_for('/') %>" class="footer-brand"><img src="<%= url_for(theme.logo_image) %>" alt="" class="footer-logo"><%= theme.logo %></a>
+      <div class="links">
+        <% theme.nav.forEach(function(item){ %>
+        <a href="<%= url_for(item.url) %>"><%= item.text %></a>
+        <% }); %>
+        <a href="<%= url_for('/resources/') %>#friends">友链</a>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="bot">
+      <span>© <%= date(new Date(), 'YYYY') %> <%= config.title %> · <%= theme.footer.powered %></span>
+      <span><%= theme.footer.note %></span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,132 @@
+<%
+  // 普通文章布局（与课程完全独立）；带 video 字段的文章在封面位显示播放器
+  var catObj = page.categories && page.categories.first ? page.categories.first() : null;
+  var cat = catObj ? catObj.name : '文章';
+  var videoId = '';
+  var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  if(vm) videoId = vm[1];
+  var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
+  var isVideo = !!videoId;
+
+  // 阅读时长估算（按正文纯文本字数，约 350 字/分钟）
+  var plain = String(page.content || '').replace(/<[^>]*>/g, '').replace(/\s+/g, '');
+  var readMin = Math.max(1, Math.round(plain.length / 350));
+
+  // 相邻文章（同分类优先，否则全部）
+  var posts = site.posts.filter(function(p){ return p.path !== page.path; }).sort('-date');
+  var sameCat = posts.filter(function(p){
+    var c = p.categories && p.categories.first ? p.categories.first() : null;
+    return c && catObj && c.name === catObj.name;
+  });
+  var pool = sameCat.length ? sameCat : posts;
+  var related = pool.slice(0, 3);
+  function relVideo(p){ return /^(?:https?:)?\/\/(?:www\.)?youtu(?:\.be|be\.com)/.test(String(p.video || '')); }
+  function fmtDay(d){ return d ? date(d, 'MM-DD') : ''; }
+  function fmtFull(d){ return d ? date(d, 'YYYY-MM-DD') : ''; }
+%>
+<div class="readbar"><div class="readbar-fill" id="readbar-fill"></div></div>
+<div class="wrap">
+  <div class="post-layout" id="post-layout">
+  <!-- 第一行：标题区横跨整个内容宽度（徽标/标题/作者行/标签），下方才是「文章 + 目录」两列 -->
+  <div class="post-head-col">
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><a href="<%= url_for('/archives/') %>">文章</a><span>›</span><%= page.title %></div>
+
+  <article class="post-wrap">
+    <!-- 文章头 -->
+    <header class="post-head">
+      <div class="post-head-top">
+        <span class="post-cat"><%= cat %></span>
+        <% if(isVideo){ %>
+        <span class="post-kind">▶ 视频讲义</span>
+        <% } else { %>
+        <span class="post-kind plain">✎ 图文文章</span>
+        <% } %>
+      </div>
+      <h1><%= page.title %></h1>
+      <div class="post-meta">
+        <span class="pm-author"><img src="<%= url_for(theme.logo_image) %>" alt="" class="avatar"> <%= theme.creator.name %></span>
+        <span class="pm-dot">·</span>
+        <% if(page.date){ %><span class="pm-item">◈ <%= fmtFull(page.date) %></span><span class="pm-dot">·</span><% } %>
+        <span class="pm-item">◷ 约 <%= readMin %> 分钟读完</span>
+      </div>
+      <% if(page.tags && page.tags.length){ %>
+      <div class="post-tags">
+        <% page.tags.each(function(t){ %><span class="p-tag"># <%= t.name %></span><% }); %>
+      </div>
+      <% } %>
+    </header>
+  </article>
+  </div><!-- /post-head-col -->
+
+  <!-- 第二行主列：移动目录 / 封面 / 摘要 / 正文，与右侧目录同一行起始 -->
+  <div class="post-main-col">
+    <!-- 移动端目录（桌面显示右侧悬浮目录） -->
+    <details class="toc-m" id="toc-m" hidden>
+      <summary><span class="toc-m-ic">☰</span> 文章目录 <span class="toc-m-count" id="toc-m-count"></span><span class="toc-m-arrow">⌄</span></summary>
+      <nav class="toc-list" id="toc-m-list" aria-label="文章目录"></nav>
+    </details>
+
+    <!-- 封面：视频文章显示播放器，纯图文显示封面图 -->
+    <% if(embedUrl){ %>
+    <div class="player post-player">
+      <iframe src="<%= embedUrl %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+    <% } else if(page.cover){ %>
+    <div class="post-cover"><img src="<%= url_for(page.cover) %>" alt="<%= page.title %>"></div>
+    <% } %>
+
+    <!-- 摘要 -->
+    <% if(page.summary || page.description){ %>
+    <div class="post-lead">
+      <span class="lead-mark">&ldquo;</span>
+      <div class="lead-txt"><%= page.summary || page.description %></div>
+    </div>
+    <% } %>
+
+    <div class="article post-body"><%- page.content %></div>
+
+  <!-- 评论区：紧跟正文，位于相关阅读与打赏卡之前 -->
+  <%- partial('_partial/comments') %>
+
+  <!-- 相关阅读 -->
+  <% if(related.length){ %>
+  <section class="related">
+    <div class="rel-head"><h2>继续阅读</h2><a href="<%= url_for('/archives/') %>">查看全部 →</a></div>
+    <div class="related-grid">
+      <% related.forEach(function(p, i){ %>
+      <% var rpCatObj = p.categories && p.categories.first ? p.categories.first() : null; %>
+      <% var rpCat = rpCatObj && rpCatObj.name ? rpCatObj.name : '文章'; %>
+      <a href="<%= url_for(p.path) %>" class="rel-card">
+        <div class="rel-cover g<%= i % 3 %>">
+          <span class="rel-glyph"><%= relVideo(p) ? '▶' : rpCat.charAt(0) %></span>
+          <span class="rel-cat"><%= rpCat %><%= relVideo(p) ? ' · 视频' : '' %></span>
+        </div>
+        <div class="rel-body">
+          <span class="rel-date"><%= fmtDay(p.date) %></span>
+          <h3><%= p.title %></h3>
+          <span class="rel-go">阅读全文 →</span>
+        </div>
+      </a>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- 打赏（作者签名信息已并入此收尾卡） -->
+  <%- partial('_partial/reward', { rwCtx: {
+    badge: '原创',
+    title: page.title,
+    desc: '科技分享博主 · 专注 AI 工具实战与体系化课程，把复杂的东西讲简单。',
+    meta: cat + (page.date ? ' · 发布于 ' + fmtFull(page.date) : ''),
+    copyright: '本博客所有文章除特别声明外，均采用 CC BY-NC-SA 4.0 许可协议。转载请注明来自 一休AI实验室！'
+  } }) %>
+  </div><!-- /post-main-col：正文、评论、继续阅读、打赏统一在同一主列 -->
+
+  <!-- 桌面端目录：grid 第二行右栏，顶部与正文对齐；滚动时 sticky 吸附 -->
+  <aside class="toc" id="toc" aria-label="文章目录" hidden>
+    <div class="toc-head"><span class="toc-ic">☰</span><b>文章目录</b><span class="toc-count" id="toc-count"></span></div>
+    <nav class="toc-list" id="toc-list"></nav>
+    <div class="toc-foot"><span>滚动时自动定位当前章节</span><button type="button" class="toc-top" id="toc-top">↑ 顶部</button></div>
+  </aside>
+  </div><!-- /post-layout -->
+</div><!-- /wrap -->

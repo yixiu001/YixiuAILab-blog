@@ -1,0 +1,36 @@
+<div class="wrap">
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span>搜索</div>
+  <section class="simple-head"><h1>站内搜索</h1><p>搜索文章标题、标签与内容关键词</p></section>
+  <div class="search-box">
+    <input type="text" id="site-search" placeholder="输入关键词，例如：API、注册、知识库…" autocomplete="off">
+  </div>
+  <div class="article-list" id="search-results">
+    <% site.posts.sort('-date').each(function(post){ %>
+    <a href="<%= url_for(post.path) %>" class="arow search-item" data-text="<%= (post.title + ' ' + (post.tags ? post.tags.map(function(t){return t.name;}).join(' ') : '') + ' ' + strip_html(post.content)).toLowerCase() %>">
+      <span class="acat"><% var c = post.categories.first(); %><%= c ? c.name : '文章' %></span>
+      <span class="amid"><h3><%= post.title %></h3><p><% post.tags.each(function(t, j){ %><%= j > 0 ? ' · ' : '' %><%= t.name %><% }); %></p></span>
+      <span class="adate"><%= date(post.date, 'MM-DD') %></span>
+    </a>
+    <% }); %>
+  </div>
+  <div class="empty" id="search-empty" style="display:none">没有找到匹配的内容，换个关键词试试。</div>
+</div>
+<script>
+(function(){
+  var input = document.getElementById('site-search');
+  var items = Array.prototype.slice.call(document.querySelectorAll('.search-item'));
+  var empty = document.getElementById('search-empty');
+  if(!input) return;
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    items.forEach(function(it){
+      var hit = !q || it.getAttribute('data-text').indexOf(q) >= 0;
+      it.style.display = hit ? '' : 'none';
+      if(hit) shown++;
+    });
+    empty.style.display = (q && shown === 0) ? '' : 'none';
+  });
+  input.focus();
+})();
+</script>

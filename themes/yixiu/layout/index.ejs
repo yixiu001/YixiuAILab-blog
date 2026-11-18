@@ -1,0 +1,188 @@
+<%
+  // ===== 首页数据：全部来自站点自身真实内容，不含任何 YouTube 视频数据 =====
+  var courses = site.data.courses || [];
+  var posts = site.posts;
+
+  // 真实统计：课程门数 / 总节数 / 文章篇数
+  var totalLessons = 0, totalGroups = 0;
+  courses.forEach(function(c){
+    totalGroups += (c.chapters || []).length;
+    (c.chapters || []).forEach(function(g){ totalLessons += (g.items || []).length; });
+  });
+  var postCount = posts.length;
+  var stats = [
+    { value: courses.length, label: '门课程' },
+    { value: totalLessons, label: '节课程' },
+    { value: postCount, label: '篇教程文章' }
+  ];
+
+  // 主推课程 + 其他课程（都来自 courses.yml）
+  var featured = courses.filter(function(c){ return c.featured; });
+  if(!featured.length) featured = courses;
+  var mainCourse = featured[0] || null;
+  var otherCourses = featured.slice(1);
+
+  // 兼容旧配置：courses.yml 为空时用主题配置兜底，保证首页不blank
+  var legacy = theme.v2 && theme.v2.course ? theme.v2.course : {};
+  var mainLessonCount = 0, mainGroups = 0;
+  if(mainCourse){
+    (mainCourse.chapters || []).forEach(function(g){ mainGroups++; mainLessonCount += (g.items || []).length; });
+  }
+  var cTitle = mainCourse ? (mainCourse.short || mainCourse.title) : legacy.title;
+  var cDesc = mainCourse ? mainCourse.desc : legacy.desc;
+  var cHours = mainCourse ? mainCourse.hours : legacy.hours;
+  var cLevel = mainCourse ? mainCourse.level : legacy.level;
+  var cBadge = mainCourse ? (mainCourse.badge || legacy.tag) : legacy.tag;
+  var cHighlights = mainCourse ? (mainCourse.highlights || legacy.highlights || []) : (legacy.highlights || []);
+  var lessonCount = mainLessonCount || totalLessons;
+
+  // 章节预览：每门课取第一章第一节，最多 3 个
+  var previews = [];
+  courses.forEach(function(c){
+    var g = c.chapters && c.chapters[0];
+    if(g && g.items && g.items.length){
+      var it = g.items[0];
+      previews.push({ course: c.short || c.title, group: g.group, chapter: it.chapter, title: it.title, duration: it.duration, path: it.path });
+    }
+  });
+  previews = previews.slice(0, 3);
+
+  // 最新文章（取前 6 篇）
+  var latest = posts.sort('date', -1).limit(6);
+%>
+<div class="wrap">
+  <!-- Hero -->
+  <section class="v2hero">
+    <div class="v2hero-copy">
+      <span class="v2badge"><span class="v2badge-dot"></span><%= theme.v2.hero.badge %></span>
+      <h1 class="v2hero-title"><%= theme.v2.hero.title %></h1>
+      <p class="v2hero-sub"><%= theme.v2.hero.subtitle %></p>
+      <div class="v2hero-btns">
+        <a href="<%= url_for(theme.v2.hero.primary_btn.url) %>" class="v2btn-primary"><%= theme.v2.hero.primary_btn.text %> <span>→</span></a>
+        <a href="<%= url_for(theme.v2.hero.secondary_btn.url) %>" class="v2btn-second"><%= theme.v2.hero.secondary_btn.text %></a>
+      </div>
+      <div class="v2stats">
+        <% stats.forEach(function(s){ %>
+        <span class="v2stat"><b><%= s.value %></b> <%= s.label %></span>
+        <% }); %>
+      </div>
+    </div>
+    <div class="v2hero-art">
+      <div class="v2art-code">
+        <div class="v2art-bar"><i></i><i></i><i></i><span>courses / index</span></div>
+        <div class="v2art-body">
+          <div class="ln"><span class="k">const</span> courses = [</div>
+          <div class="ln">&nbsp;&nbsp;{ title: <span class="s">'<%= cTitle %>'</span>,</div>
+          <div class="ln">&nbsp;&nbsp;&nbsp;&nbsp;lessons: <span class="n"><%= lessonCount %></span>,</div>
+          <div class="ln">&nbsp;&nbsp;&nbsp;&nbsp;level: <span class="s">'<%= cLevel %>'</span> },</div>
+          <div class="ln">&nbsp;&nbsp;<span class="c">// 共 <%= courses.length %> 门课 · <%= totalLessons %> 节</span></div>
+          <div class="ln">]</div>
+        </div>
+      </div>
+      <div class="v2art-badge"><span class="v2art-check">✓</span> 体系化 · 可落地</div>
+    </div>
+  </section>
+</div>
+
+<!-- 主推课程 -->
+<section class="v2course-section">
+  <div class="wrap">
+    <div class="v2sec-head"><h2 class="v2sec-title">精选课程</h2><a href="<%= url_for('/courses/') %>" class="v2sec-more">查看全部 <%= courses.length %> 门 →</a></div>
+    <% if(mainCourse || !courses.length){ %>
+    <a href="<%= mainCourse ? url_for('/courses/#' + mainCourse.id) : url_for('/courses/') %>" class="v2course-banner">
+      <div class="v2cb-glow"></div>
+      <div class="v2cb-main">
+        <span class="v2cb-tag"><%= cBadge %></span>
+        <h3><%= cTitle %></h3>
+        <p><%= cDesc %></p>
+        <div class="v2cb-meta">
+          <span><%= lessonCount %> 节课时</span><span class="dot"></span>
+          <span>约 <%= cHours %> 小时</span><span class="dot"></span>
+          <span><%= cLevel %></span>
+        </div>
+        <span class="v2cb-btn">开始学习 <span>→</span></span>
+      </div>
+      <div class="v2cb-side">
+        <div class="v2cb-side-title">你将学到</div>
+        <% cHighlights.forEach(function(h){ %>
+        <div class="v2cb-hl"><span class="v2cb-hl-i">✓</span><%= h %></div>
+        <% }); %>
+      </div>
+    </a>
+    <% } %>
+
+    <% if(otherCourses.length){ %>
+    <div class="v2mini-grid">
+      <% otherCourses.forEach(function(c){
+        var n = 0; (c.chapters || []).forEach(function(g){ n += (g.items || []).length; });
+      %>
+      <a href="<%= url_for('/courses/#' + c.id) %>" class="v2mini-course">
+        <div class="v2mc-top"><span class="v2mc-ic">▦</span><span class="v2mc-count"><%= n %> 节</span></div>
+        <h4><%= c.short || c.title %></h4>
+        <p><%= c.desc %></p>
+        <span class="v2mc-go">查看课程 →</span>
+      </a>
+      <% }); %>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- 课程章节预览 -->
+<section class="v2chapter-section">
+  <div class="wrap">
+    <div class="v2sec-head"><h2 class="v2sec-title">课程章节</h2><a href="<%= url_for('/courses/') %>" class="v2sec-more">全部 <%= totalLessons %> 节 →</a></div>
+    <div class="v2chapter-grid">
+      <% previews.forEach(function(p){ %>
+      <a href="<%= url_for(p.path) %>" class="v2chapter-card">
+        <div class="v2cc-top"><span class="v2cc-group"><%= p.course %></span><span class="v2cc-dur"><%= p.duration %></span></div>
+        <div class="v2cc-num"><%= ('0'+p.chapter).slice(-2) %></div>
+        <h3 class="v2cc-title"><%= p.title %></h3>
+        <span class="v2cc-go">开始学习 →</span>
+      </a>
+      <% }); %>
+      <% if(!previews.length){ %>
+      <div class="v2empty">还没有课程章节，去 <code>source/_data/courses.yml</code> 添加吧。</div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- 最新文章 -->
+<section class="v2article-section">
+  <div class="wrap">
+    <div class="v2sec-head"><h2 class="v2sec-title">最新文章</h2><a href="<%= url_for('/archives/') %>" class="v2sec-more">查看全部 →</a></div>
+    <div class="v2article-list">
+      <% latest.each(function(post, i){ %>
+      <a href="<%= url_for(post.path) %>" class="v2arow">
+        <span class="v2acat"><% var c = post.categories.first(); %><%= c ? c.name : '文章' %></span>
+        <span class="v2amid"><h3><%= post.title %></h3><p><% (post.tags || []).forEach(function(t, j){ %><%= j > 0 ? ' · ' : '' %><%= t.name %><% }); %></p></span>
+        <% if(i === 0){ %><span class="v2unread"></span><% } %>
+        <span class="v2adate"><%= date(post.date, 'MM-DD') %></span>
+      </a>
+      <% }); %>
+      <% if(!latest.length){ %>
+      <div class="v2empty">还没有文章，去 <code>source/_posts/</code> 写第一篇吧。</div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- 关于作者（精简，无订阅按钮） -->
+<section class="v2about">
+  <div class="wrap">
+    <div class="v2about-card">
+      <img src="<%= url_for(theme.logo_image) %>" alt="<%= theme.creator.name %>" class="v2about-avatar">
+      <div class="v2about-info">
+        <div class="v2about-name"><%= theme.creator.name %></div>
+        <p><%= theme.creator.desc %></p>
+        <div class="v2channels">
+          <% theme.creator.channels.forEach(function(ch){ %>
+          <a href="<%= ch.url %>" class="v2ch <%= ch.class %>" target="_blank" rel="noopener"><%= ch.icon %> <%= ch.name %></a>
+          <% }); %>
+        </div>
+      </div>
+      <a href="<%= url_for('/about/') %>" class="v2about-btn">了解更多 →</a>
+    </div>
+  </div>
+</section>

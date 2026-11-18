@@ -1,0 +1,106 @@
+<%
+  // 工具详情页：数据由 scripts/tool-pages.js 生成器注入
+  var tool = page.tool || {};
+  var group = page.group || {};
+  var prevTool = page.prevTool;
+  var nextTool = page.nextTool;
+  var allGroups = page.allGroups || [];
+  var siteTitle = config.title || '';
+%>
+<div class="wrap">
+  <div class="crumb">
+    <a href="<%= url_for('/') %>">首页</a><span>›</span>
+    <a href="<%= url_for('/resources/') %>">资源</a><span>›</span>
+    <a href="<%= url_for('/resources/') %>#<%= group.anchor || '' %>"><%= group.name || '工具' %></a><span>›</span>
+    <%= tool.name %>
+  </div>
+
+  <div class="tool-detail-layout">
+    <main class="td-main">
+      <!-- 工具头 -->
+      <header class="td-hero">
+        <div class="td-icon"><%= tool.icon || '🔧' %></div>
+        <div class="td-hero-info">
+          <div class="td-badges">
+            <a class="td-group" href="<%= url_for('/resources/') %>"><%= group.icon || '' %> <%= group.name || '工具' %></a>
+            <% if(tool.featured){ %><span class="td-featured">★ 精选工具</span><% } %>
+          </div>
+          <h1><%= tool.name %></h1>
+          <p class="td-desc"><%= tool.desc %></p>
+          <a href="<%= tool.url %>" class="td-cta" target="_blank" rel="noopener noreferrer">
+            访问官网 <span>↗</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- 简介 -->
+      <section class="td-section">
+        <h2><span class="td-sec-bar"></span>工具简介</h2>
+        <p class="td-detail"><%= tool.detail || tool.desc %></p>
+      </section>
+
+      <!-- 标签 -->
+      <% if(tool.tags && tool.tags.length){ %>
+      <section class="td-section">
+        <h2><span class="td-sec-bar"></span>标签</h2>
+        <div class="td-tags">
+          <% tool.tags.forEach(function(t){ %><span class="td-tag"># <%= t %></span><% }); %>
+        </div>
+      </section>
+      <% } %>
+
+      <!-- 使用提醒 -->
+      <div class="td-notice">
+        <span class="td-notice-ic">ⓘ</span>
+        <p>本页仅做整理与指路，工具的功能与政策以官网最新说明为准。涉及注册、支付的操作请自行判断风险。</p>
+      </div>
+
+      <!-- 上一篇 / 下一篇 -->
+      <% if(prevTool || nextTool){ %>
+      <nav class="td-pager" aria-label="工具导航">
+        <% if(prevTool){ %>
+        <a href="<%= url_for('/tools/' + prevTool.id + '/') %>" class="td-pager-item prev">
+          <span class="tp-label">← 上一个</span>
+          <span class="tp-title"><%= prevTool.icon %> <%= prevTool.name %></span>
+        </a>
+        <% } else { %><span class="td-pager-item prev placeholder"></span><% } %>
+        <% if(nextTool){ %>
+        <a href="<%= url_for('/tools/' + nextTool.id + '/') %>" class="td-pager-item next">
+          <span class="tp-label">下一个 →</span>
+          <span class="tp-title"><%= nextTool.icon %> <%= nextTool.name %></span>
+        </a>
+        <% } else { %><span class="td-pager-item next placeholder"></span><% } %>
+      </nav>
+      <% } %>
+    </main>
+
+    <!-- 侧栏：同分类工具 -->
+    <aside class="td-side">
+      <div class="td-side-card">
+        <div class="td-side-head"><%= group.icon || '' %> 同分类工具</div>
+        <% (allGroups || []).forEach(function(g){ %>
+          <% if(g.name !== group.name) return; %>
+          <div class="td-side-list">
+            <% (g.items || []).forEach(function(it){ %>
+            <a href="<%= url_for('/tools/' + it.id + '/') %>" class="td-side-item <%= it.id === tool.id ? 'on' : '' %>">
+              <span class="tsi-ic"><%= it.icon %></span>
+              <span class="tsi-name"><%= it.name %></span>
+              <% if(it.id === tool.id){ %><span class="tsi-dot"></span><% } %>
+            </a>
+            <% }); %>
+          </div>
+        <% }); %>
+      </div>
+      <a href="<%= url_for('/resources/') %>" class="td-side-back">← 返回工具导航</a>
+    </aside>
+  </div>
+
+  <!-- 打赏（作者签名信息已并入此收尾卡） -->
+  <%- partial('_partial/reward', { rwCtx: {
+    badge: '工具',
+    title: tool.name,
+    desc: '科技分享博主 · 专注 AI 工具实战与体系化课程，把复杂的东西讲简单。',
+    meta: '工具导航 · ' + (group.name || '精选工具'),
+    copyright: '本页内容仅做整理与指路，工具功能与政策请以官网最新说明为准。'
+  } }) %>
+</div>

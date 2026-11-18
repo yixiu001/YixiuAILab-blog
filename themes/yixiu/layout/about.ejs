@@ -1,0 +1,204 @@
+<%
+  // ===== 关于页数据：全部来自站点自身真实内容，不写死、不编造 =====
+  var courses = site.data.courses || [];
+  var resGroups = (site.data.resources && site.data.resources.groups) || [];
+
+  // 课程门数 / 总节数
+  var totalLessons = 0;
+  courses.forEach(function(c){
+    (c.chapters || []).forEach(function(g){ totalLessons += (g.items || []).length; });
+  });
+
+  // 文章：视频讲义 / 图文文章
+  var postCount = site.posts.length, videoPosts = 0, textPosts = 0;
+  site.posts.forEach(function(p){
+    if(p.video) videoPosts++; else textPosts++;
+  });
+
+  // 工具数
+  var toolCount = 0;
+  resGroups.forEach(function(g){ toolCount += (g.items || []).length; });
+
+  var stats = [
+    { value: courses.length, label: '门体系课程' },
+    { value: totalLessons,  label: '节课程讲义' },
+    { value: postCount,     label: '篇教程文章' },
+    { value: toolCount,     label: '个精选工具' }
+  ];
+
+  // 打赏记录（来自 source/_data/reward.yml）
+  var supporters = (site.data.reward && site.data.reward.supporters) || [];
+  var supSum = 0, supHasAmount = false;
+  supporters.forEach(function(s){
+    var n = parseFloat(String(s.amount || '').replace(/[^\d.]/g, ''));
+    if(!isNaN(n)){ supSum += n; supHasAmount = true; }
+  });
+  var supTotal = supHasAmount ? '¥' + (Math.round(supSum * 100) / 100).toFixed(2) : '—';
+
+  var creator  = theme.creator || {};
+  var channels = creator.channels || [];
+  var subUrl   = theme.subscribe_url || (creator.btn_url) || '#';
+  var slogan  = (theme.v2 && theme.v2.hero) ? theme.v2.hero.title : '';
+  var chDesc  = { yt: '视频教程与工具测评', tg: '图文速递与更新提醒', gh: '开源配置与工具仓库' };
+
+  var doCards = [
+    { icon: '▶', kind: '视频讲义', title: '看得见的演示', desc: 'AI 工具测评、效率技巧与免费资源分享，每一步都配真实操作演示，跟着做就能复现。', num: videoPosts + ' 篇', btn: '看视频讲义', url: '/archives/' },
+    { icon: '✎', kind: '图文文章', title: '留得下的步骤', desc: '所有视频配套讲义都会沉淀成图文文章，方便随时查阅、搜索和按自己的节奏复用。', num: textPosts + ' 篇', btn: '浏览全部文章', url: '/archives/' },
+    { icon: '◈', kind: '体系课程', title: '串得起的路径', desc: '体系化的实战课程，视频 + 讲义结合，从环境搭建到落地发布，完整走通一条路径。', num: courses.length + ' 门', btn: '开始学习课程', url: '/courses/' }
+  ];
+%>
+<div class="wrap ab-page">
+
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><%= page.title %></div>
+
+  <!-- ===== Hero 个人名片 ===== -->
+  <section class="ab-hero">
+    <div class="ab-hero-grid" aria-hidden="true"></div>
+    <div class="ab-hero-glow" aria-hidden="true"></div>
+    <div class="ab-hero-inner">
+      <div class="ab-avatar-wrap">
+        <img src="<%= url_for(theme.logo_image) %>" alt="<%= config.title %>" class="ab-avatar">
+        <span class="ab-avatar-ring" aria-hidden="true"></span>
+        <span class="ab-avatar-dot" aria-hidden="true"></span>
+      </div>
+      <div class="ab-hero-copy">
+        <span class="ab-badge"><span class="ab-badge-dot"></span>科技分享博主 · 持续更新</span>
+        <h1 class="ab-hero-title"><%= config.title %></h1>
+        <% if(slogan){ %><p class="ab-tagline"><%= slogan %></p><% } %>
+        <p class="ab-desc"><%= creator.desc || page.description %></p>
+        <div class="ab-hero-btns">
+          <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><span class="ab-btn-ic">▶</span><%= creator.btn_text || '订阅频道' %></a>
+          <a href="<%= url_for('/courses/') %>" class="ab-btn-ghost">浏览课程 <span>→</span></a>
+        </div>
+        <% if(channels.length){ %>
+        <div class="ab-social">
+          <% channels.forEach(function(ch){ %>
+          <a href="<%= ch.url %>" class="ab-social-btn" target="_blank" rel="noopener" title="<%= ch.name %>" aria-label="<%= ch.name %>"><%= ch.icon %></a>
+          <% }); %>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 真实数据统计 ===== -->
+  <section class="ab-stats" aria-label="站点内容统计">
+    <% stats.forEach(function(s){ %>
+    <div class="ab-stat">
+      <b data-count="<%= s.value %>"><%= s.value %></b>
+      <span><%= s.label %></span>
+    </div>
+    <% }); %>
+  </section>
+
+  <!-- ===== 我在做什么 ===== -->
+  <section class="ab-section">
+    <div class="ab-sec-head">
+      <span class="ab-eyebrow">WHAT I DO</span>
+      <h2>我在做什么</h2>
+      <p>视频看演示、讲义留步骤、课程串路径——同一份内容，尽量做成你能反复查阅的样子。</p>
+    </div>
+    <div class="ab-do-grid">
+      <% doCards.forEach(function(c, i){ %>
+      <a href="<%= url_for(c.url) %>" class="ab-do-card">
+        <div class="ab-do-top">
+          <span class="ab-do-icon"><%= c.icon %></span>
+          <span class="ab-do-no">0<%= i + 1 %></span>
+        </div>
+        <span class="ab-do-kind"><%= c.kind %></span>
+        <h3><%= c.title %></h3>
+        <p><%= c.desc %></p>
+        <div class="ab-do-foot">
+          <span class="ab-do-num"><%= c.num %></span>
+          <span class="ab-do-go"><%= c.btn %> <i>→</i></span>
+        </div>
+      </a>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- ===== 写在前面（可编辑的自由正文） ===== -->
+  <% if(page.content && page.content.trim()){ %>
+  <section class="ab-words">
+    <div class="ab-sec-head">
+      <span class="ab-eyebrow">A NOTE FROM ME</span>
+      <h2>写在前面</h2>
+    </div>
+    <div class="ab-words-body"><%- page.content %></div>
+  </section>
+  <% } %>
+
+  <!-- ===== 关注的频道 ===== -->
+  <% if(channels.length){ %>
+  <section class="ab-section">
+    <div class="ab-sec-head">
+      <span class="ab-eyebrow">FOLLOW</span>
+      <h2>关注的频道</h2>
+      <p>内容会同步分发到这几个地方，挑你顺手的关注就好。</p>
+    </div>
+    <div class="ab-channel-grid">
+      <% channels.forEach(function(ch){ %>
+      <a href="<%= ch.url %>" class="ab-channel ab-ch-<%= ch.class %>" target="_blank" rel="noopener">
+        <span class="ab-channel-icon"><%= ch.icon %></span>
+        <div class="ab-channel-main">
+          <div class="ab-channel-name"><%= ch.name %></div>
+          <div class="ab-channel-desc"><%= chDesc[ch.class] || '内容更新与分享' %></div>
+        </div>
+        <span class="ab-channel-go">↗</span>
+      </a>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ===== 打赏记录 ===== -->
+  <section class="ab-section sup-section" id="supporters">
+    <div class="ab-sec-head">
+      <span class="ab-eyebrow">SUPPORTERS</span>
+      <h2>感谢每一份支持</h2>
+      <p>每一位请我喝过咖啡的朋友，都记在这里。金额随意，心意无价。</p>
+    </div>
+
+    <% if(supporters.length){ %>
+    <div class="sup-summary">已有 <b><%= supporters.length %></b> 位朋友支持过 · 合计 <b><%= supTotal %></b></div>
+    <div class="sup-grid">
+      <% supporters.forEach(function(s, i){ %>
+      <div class="sup-card">
+        <span class="sup-av g<%= i % 5 %>"><%= String(s.name || '友').charAt(0) %></span>
+        <div class="sup-info">
+          <div class="sup-top">
+            <span class="sup-name"><%= s.name || '匿名朋友' %></span>
+            <% if(s.amount){ %><span class="sup-amt"><%= s.amount %></span><% } %>
+          </div>
+          <% if(s.message){ %><p class="sup-msg">“<%= s.message %>”</p><% } %>
+          <div class="sup-meta"><% if(s.date){ %><span><%= s.date %></span><% } %></div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <% } else { %>
+    <div class="sup-empty">
+      <span class="sup-empty-ic">☕</span>
+      <div>
+        <b>第一个位置，还空着</b>
+        <p>还没有打赏记录。等第一位朋友出现，这里就会亮起来。</p>
+      </div>
+    </div>
+    <% } %>
+
+    <p class="sup-note">说明：本站是静态站，无法自动同步支付宝 / 微信账单，名单为手动整理，只记录真实且经本人同意公开的信息；不愿公开可留「匿名朋友」。想支持一下？去任意一篇<a href="<%= url_for('/archives/') %>">文章</a>底部点「打赏作者」。</p>
+  </section>
+
+  <!-- ===== 联系 / 收尾 ===== -->
+  <section class="ab-contact">
+    <div class="ab-contact-glow" aria-hidden="true"></div>
+    <span class="ab-eyebrow">SAY HELLO</span>
+    <h2>一起把知识流动起来</h2>
+    <p>如果你有合作、交流或内容建议，欢迎通过频道私信我。<br>分享好工具，让知识免费流动。</p>
+    <div class="ab-contact-btns">
+      <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><span class="ab-btn-ic">▶</span><%= creator.btn_text || '订阅频道' %></a>
+      <a href="<%= url_for('/resources/') %>" class="ab-btn-ghost">逛逛工具导航 <span>→</span></a>
+    </div>
+  </section>
+
+</div>

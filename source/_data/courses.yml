@@ -1,0 +1,66 @@
+# --------------------------------------------------
+# 多课程数据源
+# 一门课 = 一个条目。id 与章节目录 source/courses/<id>/ 对应。
+# 新增课程：复制一门课的写法，改 id / title / chapters.path 即可，
+# 首页、课程中心、课程详情页会自动识别，无需改模板。
+# --------------------------------------------------
+
+- id: ai-app
+  title: 从零打造 AI 应用：完整实战课程
+  short: 从零打造 AI 应用
+  category: AI 实战
+  badge: AI 实战课 · 共 12 节
+  desc: 一门把 AI 工具串起来的体系化课程。从环境准备、模型接入到知识库、工作流与部署发布，12 节带你做出自己的第一个 AI 应用。每节配图文讲义，随时回看。
+  hours: 4.5
+  level: 入门到实战
+  teacher: 一休AI实验室
+  featured: true
+  cover: /images/videos/-Lj0qYi_C6Q.jpg
+  highlights:
+    - 大模型 API 申请与费用控制
+    - Cherry Studio 本地部署与模型接入
+    - 知识库、工作流与多模态实战
+    - 打包部署与结业项目
+  chapters:
+    - group: 第一章 · 入门准备
+      items:
+        - { chapter: 1, title: 课程介绍与环境准备, duration: 12:30, path: /courses/ai-app/ai-lesson-1/ }
+        - { chapter: 2, title: 大模型 API 申请与费用控制, duration: 15:08, path: /courses/ai-app/ai-lesson-2/ }
+        - { chapter: 3, title: Cherry Studio 本地部署与模型接入, duration: 18:24, path: /courses/ai-app/ai-lesson-3/ }
+        - { chapter: 4, title: 搭建你的第一个 AI 助手, duration: 21:15, path: /courses/ai-app/ai-lesson-4/ }
+    - group: 第二章 · 实战进阶
+      items:
+        - { chapter: 5, title: 知识库与文档问答, duration: 24:40, path: /courses/ai-app/ai-lesson-5/ }
+        - { chapter: 6, title: 工作流自动化, duration: 19:22, path: /courses/ai-app/ai-lesson-6/ }
+        - { chapter: 7, title: 接入搜索引擎, duration: 16:50, path: /courses/ai-app/ai-lesson-7/ }
+        - { chapter: 8, title: 多模态能力实战, duration: 22:10, path: /courses/ai-app/ai-lesson-8/ }
+    - group: 第三章 · 部署发布
+      items:
+        - { chapter: 9, title: 打包与部署, duration: 20:05, path: /courses/ai-app/ai-lesson-9/ }
+        - { chapter: 10, title: 性能优化, duration: 17:33, path: /courses/ai-app/ai-lesson-10/ }
+        - { chapter: 11, title: 成本与安全, duration: 14:28, path: /courses/ai-app/ai-lesson-11/ }
+        - { chapter: 12, title: 结业项目, duration: 28:16, path: /courses/ai-app/ai-lesson-12/ }
+
+- id: prompt-lab
+  title: AI 提示词实战：从会问到会用
+  short: AI 提示词实战
+  category: 提示词
+  badge: 图文课 · 共 3 节
+  desc: 不需要写代码，用 3 节课把「提问」变成一项可复用的技能。从提示词的基本结构，到让 AI 稳定产出可用结果的实战方法，每节都配可直接套用的模板。
+  hours: 1.2
+  level: 零基础
+  teacher: 一休AI实验室
+  featured: true
+  cover: ''
+  highlights:
+    - 搞懂提示词的四个基本要素
+    - 用结构化模板减少反复追问
+    - 让 AI 帮你写出一份完整方案
+  chapters:
+    - group: 第一章 · 打基础
+      items:
+        - { chapter: 1, title: 什么是提示词工程, duration: 08:20, path: /courses/prompt-lab/lesson-1/ }
+        - { chapter: 2, title: 结构化提示词四要素, duration: 11:45, path: /courses/prompt-lab/lesson-2/ }
+    - group: 第二章 · 动手做
+      items:
+        - { chapter: 3, title: 实战：让 AI 写一份方案, duration: 14:30, path: /courses/prompt-lab/lesson-3/ }

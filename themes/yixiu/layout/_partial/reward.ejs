@@ -1,0 +1,154 @@
+<%
+  // 打赏组件：数据来自 source/_data/reward.yml
+  // 版式参考：居中头像 + 名字 + 简介/徽标/标题 + 按钮组 + 版权声明
+  // 未配置收款码时显示统一占位视觉，不伪装成可扫的真二维码。
+  // 调用方可传 rwCtx: { badge, title, desc, meta, copyright } 区分文章页 / 工具详情页，
+  // 并把原「文末作者信息卡」的内容（简介、分类日期）合并进这张收尾卡。
+  var rw = site.data.reward || {};
+  var rwTitle = rw.title || '请我喝杯咖啡';
+  var rwAlipay = String(rw.alipay || '').trim();
+  var rwWechat = String(rw.wechat || '').trim();
+  var rwDefault = rwAlipay ? 'alipay' : (rwWechat ? 'wechat' : 'alipay');
+
+  var ctx = (typeof rwCtx !== 'undefined' && rwCtx) ? rwCtx : {};
+  var ctxBadge = ctx.badge || null;
+  var ctxTitle = ctx.title || null;
+  var ctxDesc  = ctx.desc || null;
+  var ctxMeta  = ctx.meta || null;
+  var ctxCopy  = ctx.copyright || null;
+
+  var rwSubUrl  = theme.subscribe_url || (theme.creator && theme.creator.btn_url) || '#';
+  var rwSubText = (theme.creator && theme.creator.btn_text) || '订阅频道';
+%>
+<section class="rw-block">
+  <div class="rw-card">
+    <div class="rw-stars" aria-hidden="true"></div>
+    <div class="rw-cc" aria-hidden="true">C</div>
+    <div class="rw-top">
+      <img src="<%= url_for(theme.logo_image) %>" alt="" class="rw-avatar">
+      <div class="rw-name"><%= config.title %></div>
+    </div>
+
+    <% if(ctxDesc){ %><p class="rw-desc"><%= ctxDesc %></p><% } %>
+
+    <% if(ctxTitle){ %>
+    <div class="rw-title-row">
+      <% if(ctxBadge){ %><span class="rw-badge"><%= ctxBadge %></span><% } %>
+      <span class="rw-title"><%= ctxTitle %></span>
+    </div>
+    <% } %>
+
+    <% if(ctxMeta){ %><div class="rw-meta"><%= ctxMeta %></div><% } %>
+
+    <!-- 手机扫码打开本页：点击二维码按钮后在此展开 -->
+    <div class="rw-qr-pop" id="rw-qr-pop" hidden>
+      <div class="rwq-box" id="rw-qr-code" aria-label="本页地址二维码"></div>
+      <p class="rwq-tip">手机扫码 · 在手机上继续阅读</p>
+    </div>
+
+    <div class="rw-actions">
+      <button type="button" class="rw-btn" data-rw-open>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.3-9.1C1.3 8.1 3.6 4.5 7.1 4.5c2 0 3.6 1.1 4.9 3 1.3-1.9 2.9-3 4.9-3 3.5 0 5.8 3.6 4.4 7.4C19.5 16.4 12 21 12 21z"/></svg>
+        打赏作者
+      </button>
+      <a href="<%= rwSubUrl %>" class="rw-btn rw-btn-ghost" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <%= rwSubText %>
+      </a>
+      <button type="button" class="rw-sq" data-rw-qr aria-label="手机扫码打开本页" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8 0h2v2h-2v-2zm4 0h4v2h-2v2h-2v-2zm-4 4h2v4h-2v-4zm6 0h2v4h-4v-2h2v-2zm-2-4h2v2h-2v-2z"/></svg>
+      </button>
+      <button type="button" class="rw-sq" data-rw-share aria-label="分享本页链接">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.1c.1-.3.1-.5.1-.8s0-.5-.1-.8L16 7.2c.5.5 1.2.9 2 .9 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .3 0 .5.1.8L8 9.9c-.5-.5-1.2-.9-2-.9-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.9l7.1 4.2c-.1.2-.1.5-.1.7 0 1.6 1.3 2.9 3 2.9s3-1.3 3-3-1.3-2.8-3-2.8z"/></svg>
+      </button>
+    </div>
+
+    <% if(ctxCopy){ %><p class="rw-copyright"><%= ctxCopy %></p><% } %>
+  </div>
+</section>
+
+<div class="rw-modal" id="rw-modal" hidden>
+  <div class="rw-backdrop" data-rw-close></div>
+  <div class="rw-panel" role="dialog" aria-modal="true" aria-label="<%= rwTitle %>">
+    <button type="button" class="rw-close" data-rw-close aria-label="关闭">×</button>
+    <div class="rw-panel-head">
+      <span class="rw-panel-ic">☕</span>
+      <h3><%= rwTitle %></h3>
+      <p>扫码支持，金额随意。感谢你的鼓励 🙏</p>
+    </div>
+
+    <div class="rw-tabs" role="tablist">
+      <button type="button" class="rw-tab <%= rwDefault === 'alipay' ? 'on' : '' %>" data-rw-tab="alipay" role="tab">支付宝</button>
+      <button type="button" class="rw-tab <%= rwDefault === 'wechat' ? 'on' : '' %>" data-rw-tab="wechat" role="tab">微信</button>
+    </div>
+
+    <div class="rw-panes">
+      <div class="rw-pane <%= rwDefault === 'alipay' ? 'on' : '' %>" data-rw-pane="alipay">
+        <% if(rwAlipay){ %>
+        <div class="rw-qr"><img src="<%= url_for('/images/reward/' + rwAlipay) %>" alt="支付宝收款码"></div>
+        <p class="rw-qr-tip">打开支付宝 · 扫一扫</p>
+        <% } else { %>
+        <div class="rw-qr rw-qr-ph">
+          <svg class="rw-ph-svg" viewBox="0 0 120 120" aria-hidden="true">
+            <rect x="8" y="8" width="30" height="30" rx="4"/>
+            <rect x="82" y="8" width="30" height="30" rx="4"/>
+            <rect x="8" y="82" width="30" height="30" rx="4"/>
+            <rect x="16" y="16" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="90" y="16" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="16" y="90" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="52" y="12" width="8" height="8" rx="1"/>
+            <rect x="66" y="12" width="8" height="8" rx="1"/>
+            <rect x="52" y="28" width="8" height="8" rx="1"/>
+            <rect x="66" y="28" width="8" height="8" rx="1"/>
+            <rect x="46" y="46" width="10" height="10" rx="1"/>
+            <rect x="62" y="46" width="10" height="10" rx="1"/>
+            <rect x="78" y="52" width="10" height="10" rx="1"/>
+            <rect x="52" y="62" width="10" height="10" rx="1"/>
+            <rect x="70" y="70" width="10" height="10" rx="1"/>
+            <rect x="88" y="82" width="10" height="10" rx="1"/>
+            <rect x="52" y="88" width="10" height="10" rx="1"/>
+            <rect x="70" y="98" width="10" height="10" rx="1"/>
+            <rect x="96" y="98" width="10" height="10" rx="1"/>
+          </svg>
+          <span class="rw-ph-label">收款码占位</span>
+        </div>
+        <p class="rw-qr-tip">支付宝收款码</p>
+        <% } %>
+      </div>
+      <div class="rw-pane <%= rwDefault === 'wechat' ? 'on' : '' %>" data-rw-pane="wechat">
+        <% if(rwWechat){ %>
+        <div class="rw-qr"><img src="<%= url_for('/images/reward/' + rwWechat) %>" alt="微信收款码"></div>
+        <p class="rw-qr-tip">打开微信 · 扫一扫</p>
+        <% } else { %>
+        <div class="rw-qr rw-qr-ph">
+          <svg class="rw-ph-svg" viewBox="0 0 120 120" aria-hidden="true">
+            <rect x="8" y="8" width="30" height="30" rx="4"/>
+            <rect x="82" y="8" width="30" height="30" rx="4"/>
+            <rect x="8" y="82" width="30" height="30" rx="4"/>
+            <rect x="16" y="16" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="90" y="16" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="16" y="90" width="14" height="14" rx="2" class="rw-ph-in"/>
+            <rect x="52" y="12" width="8" height="8" rx="1"/>
+            <rect x="66" y="12" width="8" height="8" rx="1"/>
+            <rect x="52" y="28" width="8" height="8" rx="1"/>
+            <rect x="66" y="28" width="8" height="8" rx="1"/>
+            <rect x="46" y="46" width="10" height="10" rx="1"/>
+            <rect x="62" y="46" width="10" height="10" rx="1"/>
+            <rect x="78" y="52" width="10" height="10" rx="1"/>
+            <rect x="52" y="62" width="10" height="10" rx="1"/>
+            <rect x="70" y="70" width="10" height="10" rx="1"/>
+            <rect x="88" y="82" width="10" height="10" rx="1"/>
+            <rect x="52" y="88" width="10" height="10" rx="1"/>
+            <rect x="70" y="98" width="10" height="10" rx="1"/>
+            <rect x="96" y="98" width="10" height="10" rx="1"/>
+          </svg>
+          <span class="rw-ph-label">收款码占位</span>
+        </div>
+        <p class="rw-qr-tip">微信收款码</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="rw-foot">每一位支持者都会记在 <a href="<%= url_for('/about/') %>#supporters">关于页</a></div>
+  </div>
+</div>

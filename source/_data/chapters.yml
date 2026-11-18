@@ -1,0 +1,18 @@
+- group: 第一章 · 入门准备
+  items:
+    - { chapter: 1, title: 课程介绍与环境准备, duration: 12:30, path: /courses/ai-app/ai-lesson-1/ }
+    - { chapter: 2, title: 大模型 API 申请与费用控制, duration: 15:08, path: /courses/ai-app/ai-lesson-2/ }
+    - { chapter: 3, title: Cherry Studio 本地部署与模型接入, duration: 18:24, path: /courses/ai-app/ai-lesson-3/ }
+    - { chapter: 4, title: 搭建你的第一个 AI 助手, duration: 21:15, path: /courses/ai-app/ai-lesson-4/ }
+- group: 第二章 · 实战进阶
+  items:
+    - { chapter: 5, title: 知识库与文档问答, duration: 24:40, path: /courses/ai-app/ai-lesson-5/ }
+    - { chapter: 6, title: 工作流自动化, duration: 19:22, path: /courses/ai-app/ai-lesson-6/ }
+    - { chapter: 7, title: 接入搜索引擎, duration: 16:50, path: /courses/ai-app/ai-lesson-7/ }
+    - { chapter: 8, title: 多模态能力实战, duration: 22:10, path: /courses/ai-app/ai-lesson-8/ }
+- group: 第三章 · 部署发布
+  items:
+    - { chapter: 9, title: 打包与部署, duration: 20:05, path: /courses/ai-app/ai-lesson-9/ }
+    - { chapter: 10, title: 性能优化, duration: 17:33, path: /courses/ai-app/ai-lesson-10/ }
+    - { chapter: 11, title: 成本与安全, duration: 14:28, path: /courses/ai-app/ai-lesson-11/ }
+    - { chapter: 12, title: 结业项目, duration: 28:16, path: /courses/ai-app/ai-lesson-12/ }

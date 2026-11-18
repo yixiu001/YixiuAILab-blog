@@ -1,0 +1,40 @@
+# 一休AI实验室 · 评论/数据 Worker 部署配置
+# 文档：https://developers.cloudflare.com/workers/
+#
+# 替换 database_id 后即可部署（统一走 cf.ps1，自动绕过残留代理）：
+#   cd cloudflare/comments
+#   ... 先在 .env 填入新账号的 CLOUDFLARE_API_TOKEN
+#   .\cf.ps1 d1 create yixiu-site
+#   .\cf.ps1 d1 execute yixiu-site --remote --file=.\schema.sql -y
+#   .\cf.ps1 deploy
+#
+# 注：-y 用于跳过 d1 execute 的交互确认，非交互终端必须加，否则会卡住。
+
+name = "yixiu-comments"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yixiu-site"
+database_id = "6a88085e-6d0d-4c4a-b8d5-3612f8f2d8fc"
+
+# 自定义域名：workers.dev 在国内被 DNS 污染，改走自己的域名。
+# zone 需与 Worker 在同一 Cloudflare 账号下；deploy 时会自动建 DNS 记录并绑定。
+# 子域选 api. 而非 comments.，便于以后复用给阅读数/点赞等接口。
+[[routes]]
+pattern = "api.yixiu521.com"
+custom_domain = true
+
+# 跨域白名单：只允许本站与本地预览调用 API，避免被第三方站点滥用。
+# 以后换端口或加域名，在下面逗号分隔列表里追加即可。
+[vars]
+ALLOW_ORIGIN = "https://yixiu521.com,https://www.yixiu521.com,http://localhost:4000,http://127.0.0.1:4000"
+# GitHub 授权失败时的兜底回跳地址（不带尾斜杠）
+SITE_URL = "https://yixiu521.com"
+
+# GitHub OAuth 凭证必须用 Secret，不要写进本文件：
+#   .\cf.ps1 secret put GITHUB_CLIENT_ID
+#   .\cf.ps1 secret put GITHUB_CLIENT_SECRET
+# GitHub OAuth App 的 Authorization callback URL 必须填：
+#   https://api.yixiu521.com/api/auth/github/callback

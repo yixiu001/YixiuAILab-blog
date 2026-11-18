@@ -1,0 +1,18 @@
+<header class="topbar">
+  <div class="wrap">
+    <a href="<%= url_for('/') %>" class="logo">
+      <img src="<%= url_for(theme.logo_image) %>" alt="<%= theme.logo %>" class="logo-img">
+      <span class="logo-txt"><%= theme.logo %></span>
+    </a>
+    <nav class="nav">
+      <% theme.nav.forEach(function(item){ %>
+      <a href="<%= url_for(item.url) %>" class="<%= item.active ? 'active' : '' %>"><%= item.text %></a>
+      <% }); %>
+    </nav>
+    <div class="nav-right">
+      <a href="<%= url_for('/search/') %>" class="search" title="搜索">⌕</a>
+      <div id="auth-slot" class="auth-slot"></div>
+      <a href="<%= theme.subscribe_url %>" class="btn-sub" target="_blank" rel="noopener"><%= theme.subscribe_text %></a>
+    </div>
+  </div>
+</header>

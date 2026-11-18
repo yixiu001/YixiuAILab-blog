@@ -1,0 +1,156 @@
+<%
+  // 工具导航页：数据来自 source/_data/resources.yml
+  var groups = (site.data.resources && site.data.resources.groups) || [];
+  var toolCount = 0, featuredCount = 0;
+  groups.forEach(function(g){
+    (g.items || []).forEach(function(it){
+      toolCount++;
+      if(it.featured) featuredCount++;
+    });
+  });
+  // 友情链接（并入本页，不再有独立 /friends/ 页面）
+  var fr = (site.data.resources && site.data.resources.friends) || {};
+  var frLinks = fr.links || [];
+  var frIntro = fr.intro || '认识的同好博客和频道，欢迎互相串门。';
+  var frApplyNote = fr.apply_note || '想交换友链的话，欢迎通过频道私信我。';
+  var frReqs = fr.requirements || [];
+  var subUrl = theme.subscribe_url || (theme.creator && theme.creator.btn_url) || '#';
+%>
+<div class="wrap">
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><%= page.title %></div>
+
+  <!-- 页头 -->
+  <section class="nav-head">
+    <div class="nav-head-copy">
+      <span class="nav-eyebrow">TOOLBOX · 工具导航</span>
+      <h1>好用的工具，都在这里</h1>
+      <p>我亲测在用的 AI 工具、建站资源与效率软件，按场景分类整理，点开卡片查看详情。持续更新中。</p>
+    </div>
+    <div class="nav-stats">
+      <div class="nav-stat"><b><%= groups.length %></b><span>个分类</span></div>
+      <div class="nav-stat sep"><b><%= toolCount %></b><span>个工具</span></div>
+      <div class="nav-stat"><b><%= featuredCount %></b><span>个精选</span></div>
+    </div>
+  </section>
+
+  <!-- 搜索框 -->
+  <div class="nav-search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input type="search" id="tool-search" placeholder="搜索工具名称、用途或标签，例如：写作 / 部署 / 免费" autocomplete="off">
+    <kbd>/</kbd>
+  </div>
+
+  <!-- 两栏：左侧悬浮菜单 + 右侧内容 -->
+  <div class="nav-layout">
+    <!-- 左侧悬浮分类菜单 -->
+    <aside class="nav-side">
+      <div class="ns-card">
+        <div class="ns-title">分类导航</div>
+        <nav class="ns-menu" id="nav-cats" aria-label="工具分类">
+          <% groups.forEach(function(g, gi){ %>
+          <a href="#group-<%= gi %>" class="ns-item <%= gi === 0 ? 'on' : '' %>" data-target="group-<%= gi %>">
+            <span class="ns-ic"><%= g.icon %></span>
+            <span class="ns-name"><%= g.name %></span>
+            <span class="ns-count"><%= (g.items || []).length %></span>
+          </a>
+          <% }); %>
+          <a href="#friends" class="ns-item" data-target="friends">
+            <span class="ns-ic">🔗</span>
+            <span class="ns-name">友情链接</span>
+            <span class="ns-count"><%= frLinks.length %></span>
+          </a>
+        </nav>
+      </div>
+      <div class="ns-tip">点击分类快速定位<br>滚动时自动高亮当前分类</div>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <div class="nav-content">
+      <% groups.forEach(function(g, gi){ %>
+      <section class="nav-group" id="group-<%= gi %>" data-group>
+        <div class="ng-head">
+          <div class="ng-title"><span class="ng-ic"><%= g.icon %></span><h2><%= g.name %></h2><span class="ng-count"><%= (g.items || []).length %></span></div>
+          <p><%= g.desc %></p>
+        </div>
+        <div class="tool-grid">
+          <% (g.items || []).forEach(function(it){ %>
+          <% var kw = [it.name, it.desc, (it.detail || ''), g.name].concat(it.tags || []).join(' ').toLowerCase(); %>
+          <a href="<%= url_for('/tools/' + (it.id || '') + '/') %>" class="tool-card" data-kw="<%= kw %>" data-name="<%= String(it.name).toLowerCase() %>">
+            <div class="tc-top">
+              <span class="tc-icon"><%= it.icon %></span>
+              <% if(it.featured){ %><span class="tc-featured">精选</span><% } %>
+              <span class="tc-go">→</span>
+            </div>
+            <h3><%= it.name %></h3>
+            <p><%= it.desc %></p>
+            <div class="tc-tags">
+              <% (it.tags || []).forEach(function(t){ %><span class="tc-tag"><%= t %></span><% }); %>
+            </div>
+            <span class="tc-detail">查看详情 →</span>
+          </a>
+          <% }); %>
+        </div>
+      </section>
+      <% }); %>
+
+      <div id="tool-empty" class="nav-empty" hidden>
+        <span>🔎</span>
+        <p>没有找到匹配的工具</p>
+        <small>换个关键词试试，或清空搜索框</small>
+      </div>
+
+      <!-- 友情链接（已并入资源页，不再设独立页面） -->
+      <section class="fr-section" id="friends">
+        <div class="ng-head">
+          <div class="ng-title"><span class="ng-ic">🔗</span><h2>友情链接</h2><span class="ng-count"><%= frLinks.length %></span></div>
+          <p><%= frIntro %></p>
+        </div>
+
+        <% if(frLinks.length){ %>
+        <div class="fr-grid">
+          <% frLinks.forEach(function(l){ %>
+          <a href="<%= l.url %>" class="fr-card" target="_blank" rel="noopener">
+            <span class="fr-av"><%= l.icon || String(l.name).charAt(0) %></span>
+            <span class="fr-info">
+              <b><%= l.name %></b>
+              <span><%= l.desc || '' %></span>
+            </span>
+            <span class="fr-go">↗</span>
+          </a>
+          <% }); %>
+        </div>
+        <% } else { %>
+        <div class="fr-empty">
+          <span class="fr-empty-ic">🔗</span>
+          <div class="fr-empty-copy">
+            <b>友链位虚位以待</b>
+            <p>这里还没有互换链接的站点。如果你也在做内容、做工具，欢迎来占个位置——不编造、不凑数，只放真实互换的链接。</p>
+          </div>
+        </div>
+        <% } %>
+
+        <div class="fr-apply">
+          <div class="fr-apply-main">
+            <span class="fr-apply-ic">✉️</span>
+            <div>
+              <b>交换友链</b>
+              <p><%= frApplyNote %></p>
+              <% if(frReqs.length){ %>
+              <ul class="fr-reqs">
+                <% frReqs.forEach(function(r){ %><li><%= r %></li><% }); %>
+              </ul>
+              <% } %>
+            </div>
+          </div>
+          <a href="<%= subUrl %>" class="fr-apply-btn" target="_blank" rel="noopener">通过频道私信 <span>→</span></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 说明 -->
+  <div class="nav-note">
+    <b>使用说明</b>
+    <p>以上工具均来自公开渠道，这里只做整理和指路，<strong>不构成任何推荐或担保</strong>。涉及注册、支付的操作请自行判断风险，以官方最新规则为准。需要具体教程？去 <a href="<%= url_for('/archives/') %>">文章归档</a> 筛选「视频讲义」看看。</p>
+  </div>
+</div>

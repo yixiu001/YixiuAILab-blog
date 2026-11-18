@@ -1,0 +1,16 @@
+.DS_Store
+Thumbs.db
+db.json
+*.log
+node_modules/
+public/
+.deploy*/
+_multiconfig.yml
+
+# 本地凭证与 Wrangler 状态，绝不能入库
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/

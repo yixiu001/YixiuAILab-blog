@@ -1,0 +1,67 @@
+<%
+  // 归档页：全部文章（含带 video 的视频讲义），按「视频 / 图文」前端筛选
+  var all = site.posts;
+  var isVideoPost = function(p){
+    if(p.video) return true;
+    return (p.tags || []).some(function(t){ return (typeof t === 'string' ? t : t.name) === '视频'; });
+  };
+  var videoTotal = all.filter(isVideoPost).length;
+  var textTotal = all.length - videoTotal;
+  // 分类配色：按分类名稳定映射到一组柔和色
+  var toneList = ['a','b','c','d','e','f'];
+  function catTone(name){
+    var s = String(name || ''), sum = 0;
+    for(var i=0;i<s.length;i++){ sum += s.charCodeAt(i); }
+    return toneList[sum % toneList.length];
+  }
+%>
+<div class="wrap">
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span>文章归档</div>
+
+  <!-- 页头 -->
+  <section class="arc-head">
+    <div class="arc-head-copy">
+      <span class="arc-eyebrow">ARCHIVE · 全部文章</span>
+      <h1>文章归档</h1>
+      <p>实战教程、工具测评与踩坑笔记，按类型快速筛选。</p>
+    </div>
+    <div class="arc-stats">
+      <div class="arc-stat"><b><%= all.length %></b><span>全部文章</span></div>
+      <div class="arc-stat sep"><b><%= videoTotal %></b><span>视频讲义</span></div>
+      <div class="arc-stat"><b><%= textTotal %></b><span>图文文章</span></div>
+    </div>
+  </section>
+
+  <div class="archive-filter" id="archive-filter" role="group" aria-label="按类型筛选文章">
+    <button class="af-chip on" data-kind="all" type="button">全部 <span><%= all.length %></span></button>
+    <button class="af-chip" data-kind="video" type="button">▶ 视频讲义 <span><%= videoTotal %></span></button>
+    <button class="af-chip" data-kind="text" type="button">✎ 图文文章 <span><%= textTotal %></span></button>
+  </div>
+
+  <div class="article-list" id="archive-list">
+    <% page.posts.each(function(post, idx){ %>
+    <% var isVideo = isVideoPost(post); %>
+    <% var cObj = post.categories && post.categories.first ? post.categories.first() : null; %>
+    <% var cname = cObj ? cObj.name : '文章'; %>
+    <a href="<%= url_for(post.path) %>" class="arow" data-kind="<%= isVideo ? 'video' : 'text' %>">
+      <span class="arow-idx"><%= ('0' + (idx + 1)).slice(-2) %></span>
+      <span class="arow-mark <%= isVideo ? 'video' : 'text' %>"><%= isVideo ? '▶' : '✎' %></span>
+      <span class="amid">
+        <span class="arow-line"><span class="acat tone-<%= catTone(cname) %>"><%= cname %></span><h3><%= post.title %></h3></span>
+        <span class="arow-tags"><% post.tags.each(function(t, j){ %><%= j > 0 ? ' · ' : '' %>#<%= t.name %><% }); %></span>
+      </span>
+      <span class="adate"><%= date(post.date, 'MM-DD') %></span>
+      <span class="arow-arrow">→</span>
+    </a>
+    <% }); %>
+  </div>
+  <div id="archive-empty" class="v2empty" hidden>该类型下暂时没有文章。</div>
+
+  <% if(page.total > 1){ %>
+  <div class="pager">
+    <% if(page.prev){ %><a href="<%= url_for(page.prev_link) %>">← 上一页</a><% } %>
+    <span><%= page.current %> / <%= page.total %></span>
+    <% if(page.next){ %><a href="<%= url_for(page.next_link) %>">下一页 →</a><% } %>
+  </div>
+  <% } %>
+</div>

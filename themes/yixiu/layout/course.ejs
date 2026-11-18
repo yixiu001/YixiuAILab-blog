@@ -1,0 +1,164 @@
+<%
+  // 课程专属布局：按 page.course 从 courses.yml 取对应课程，所有目录/导航只在本课程内计算
+  var courseId = page.course || 'ai-app';
+  var courses = site.data.courses || [];
+  var course = null;
+  courses.forEach(function(c){ if(c.id === courseId) course = c; });
+
+  // 兼容旧单课数据：courses.yml 未收录时回退到 chapters.yml / theme.course
+  if(!course){
+    course = {
+      id: courseId,
+      title: page.course_title || (theme.course && theme.course.title) || '课程',
+      short: page.course_title || '课程',
+      total: (theme.course && theme.course.total) || 0,
+      chapters: site.data.chapters || []
+    };
+  }
+
+  var chaptersData = course.chapters || [];
+  var curChapter = page.chapter || 1;
+  var title = page.title;
+  var courseTitle = course.title || page.course_title || '课程';
+  var courseShort = course.short || courseTitle;
+
+  // 展平当前课程的章节，计算上下节与学习进度
+  var flat = [];
+  chaptersData.forEach(function(g){ (g.items || []).forEach(function(it){ flat.push(it); }); });
+  flat.sort(function(a,b){ return a.chapter - b.chapter; });
+  var total = flat.length || course.total || 0;
+  var idx = -1; flat.forEach(function(it,i){ if(it.chapter === curChapter){ idx = i; } });
+  var prev = idx > 0 ? flat[idx-1] : null;
+  var next = idx >= 0 && idx < flat.length-1 ? flat[idx+1] : null;
+  // 章节位置：客观反映「当前是第几节 / 总节数」，不代表用户学习进度（静态站无法追踪）
+  var progress = total ? Math.round(curChapter / total * 100) + '%' : '0%';
+
+  // 视频嵌入：从第 video 字段解析真实 YouTube ID
+  var videoId = '';
+  var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  if(vm) videoId = vm[1];
+  var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
+
+  // 其他课程（用于课程间切换）
+  var otherCourses = courses.filter(function(c){ return c.id !== courseId; }).map(function(c){
+    var first = (c.chapters && c.chapters[0] && c.chapters[0].items && c.chapters[0].items[0]) || null;
+    var cnt = 0; (c.chapters || []).forEach(function(g){ cnt += (g.items || []).length; });
+    return { id: c.id, title: c.short || c.title, count: cnt, path: first ? first.path : url_for('/courses/') };
+  });
+
+  // 频道真实数据（由 sync-youtube.js 同步）
+  var yt = (site.data.youtube && site.data.youtube.channel) || {};
+%>
+<div class="wrap">
+  <div class="course-layout">
+  <!-- 第一行：课程标题区横跨整个内容宽度（与文章页一致） -->
+  <div class="course-head-col">
+  <!-- 面包屑 -->
+  <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><a href="<%= url_for('/courses/') %>">课程</a><span>›</span><a href="<%= url_for('/courses/') %>#<%= courseId %>"><%= courseShort %></a><span>›</span>第 <%= curChapter %> 节</div>
+
+  <!-- 课程头部 -->
+  <section class="course-hero">
+    <% if(page.badge || course.badge){ %><span class="chip"><span class="dot"></span><%= page.badge || course.badge %></span><% } %>
+    <h1><%= courseTitle %></h1>
+    <div class="course-meta">
+      <span class="item"><img src="<%= url_for(theme.logo_image) %>" alt="" class="avatar"> <%= page.teacher || course.teacher || theme.creator.name %></span>
+      <% if(page.hours || course.hours){ %><span class="item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><%= page.hours || course.hours %> 小时</span><% } %>
+      <% if(page.students){ %><span class="item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><%= page.students %></span><% } %>
+      <% if(page.rating){ %><span class="item"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" fill="#FFC93C" stroke="#FFC93C"/></svg><%= page.rating %></span><% } %>
+      <% if(page.updated){ %><span class="item">最近更新 <%= date(page.updated, 'YYYY-MM-DD') %></span><% } %>
+    </div>
+    <div class="progress-row"><span class="label">课程目录位置</span><div class="progress-track"><div class="progress-fill" style="width:<%= progress %>"></div></div><span class="pct">第 <%= curChapter %>/<%= total %> 节</span></div>
+  </section>
+  </div><!-- /course-head-col -->
+
+  <!-- 第二行：讲义正文 + 右侧栏，右栏顶部与播放器/讲义对齐 -->
+  <main class="layout">
+  <article class="content">
+    <!-- 视频播放器：有 video 字段才显示，纯图文课程直接展示讲义 -->
+    <% if(embedUrl){ %>
+    <div class="player">
+      <iframe src="<%= embedUrl %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+    <% } else if(page.video){ %>
+    <div class="player-fallback"><a href="<%= page.video %>" target="_blank" rel="noopener">▶ 在新窗口观看视频</a></div>
+    <% } %>
+
+    <!-- 讲义标题 -->
+    <div class="lesson-head">
+      <h2><%= page.lesson_title || title %></h2>
+      <div class="lesson-stats">
+        <% if(page.duration){ %><span>◷ <%= page.duration %></span><% } %>
+        <% if(page.views){ %><span>◉ <%= page.views %>次观看</span><% } %>
+        <% if(page.date){ %><span>◈ 更新于 <%= date(page.date, 'YYYY-MM-DD') %></span><% } %>
+        <% (page.tags || []).forEach(function(t){ %><span>＃<%= typeof t === 'string' ? t : t.name %></span><% }); %>
+      </div>
+    </div>
+
+    <!-- AI 摘要 -->
+    <% if(page.summary){ %>
+    <div class="ai-summary"><div class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.6L22.5 18l-2.6.9L19 21.5l-.9-2.6L15.5 18l2.6-.4z"/></svg></div>
+      <div><div class="ttl">本节 AI 摘要</div><p><%= page.summary %></p></div></div>
+    <% } %>
+
+    <!-- 讲义正文（支持自定义标签：note/tabs/folding/gallery/video） -->
+    <div class="article"><%- page.content %></div>
+
+    <!-- 资料下载 -->
+    <% if(page.downloads && page.downloads.length){ %>
+    <div class="download"><div class="h"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>本节课资料</div>
+      <% page.downloads.forEach(function(f){ %>
+      <div class="file"><div class="fi"><%= f.type %></div><div class="fn"><%= f.name %></div><div class="fs"><%= f.size %></div><a class="dl" href="<%= url_for(f.url) %>" target="_blank" rel="noopener">下载 ↓</a></div>
+      <% }); %>
+    </div>
+    <% } %>
+
+    <!-- 上下节：只在当前课程内切换 -->
+    <% if(prev || next){ %>
+    <div class="lnav">
+      <% if(prev){ %><a href="<%= url_for(prev.path) %>"><span class="t">← 上一节</span><span class="n">第 <%= prev.chapter %> 节：<%= prev.title %></span></a><% } else { %><span></span><% } %>
+      <% if(next){ %><a href="<%= url_for(next.path) %>" class="next"><span class="t">下一节 →</span><span class="n">第 <%= next.chapter %> 节：<%= next.title %></span></a><% } %>
+    </div>
+    <% } %>
+
+    <!-- 评论区 -->
+    <%- partial('_partial/comments') %>
+  </article>
+
+  <!-- 右侧栏 -->
+  <aside class="sidebar">
+    <div class="side-card">
+      <div class="ch"><div class="t">课程目录</div><div class="s"><%= courseShort %> · 共 <%= total %> 节</div></div>
+      <div class="catalog">
+        <% chaptersData.forEach(function(group){ %>
+        <div class="cat-group"><%= group.group %></div>
+        <% (group.items || []).forEach(function(it){ %>
+        <% var isOn = it.chapter === curChapter; %>
+        <a href="<%= it.path ? url_for(it.path) : '#' %>" class="chap <%= isOn ? 'on' : '' %>">
+          <span class="no"><%= it.chapter %></span>
+          <%= it.title %><span class="dur"><%= it.duration %></span>
+        </a>
+        <% }); %>
+        <% }); %>
+      </div>
+    </div>
+
+    <% if(otherCourses.length){ %>
+    <div class="side-card side-courses">
+      <div class="ch"><div class="t">其他课程</div></div>
+      <% otherCourses.forEach(function(c){ %>
+      <a href="<%= c.path %>" class="side-course"><span class="sc-ic">▦</span><span class="sc-tx"><b><%= c.title %></b><small><%= c.count %> 节</small></span><span class="sc-ar">→</span></a>
+      <% }); %>
+      <a href="<%= url_for('/courses/') %>" class="side-course-all">查看全部课程 →</a>
+    </div>
+    <% } %>
+
+    <div class="side-card"><div class="teacher"><div class="top"><img src="<%= url_for(theme.logo_image) %>" alt="" class="av"><div><div class="nm"><%= theme.creator.name %></div><div class="ti">科技分享博主 · 主讲人</div></div></div>
+      <p><%= theme.creator.desc %></p>
+      <div class="stats"><div><b><%= yt.subscribersText || '—' %></b>订阅</div><div><b><%= yt.videoCount != null ? yt.videoCount : '—' %></b>视频</div><div><b><%= courses.length %></b>课程</div></div></div></div>
+    <div class="side-card"><div class="channels"><div class="t">关注我的频道</div>
+      <% theme.creator.channels.forEach(function(ch){ %><a class="ch <%= ch.class %>" href="<%= ch.url %>" target="_blank" rel="noopener"><span class="ico"><%= ch.icon %></span><%= ch.name %><span class="arw">→</span></a><% }); %>
+    </div></div>
+  </aside>
+</main>
+  </div><!-- /course-layout -->
+</div><!-- /wrap -->

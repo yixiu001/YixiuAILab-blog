@@ -65,6 +65,42 @@
     var nameHint = document.getElementById('cm-name-hint');
     if(!API || !form) return;
 
+    // 评论草稿按页面路径存本地，刷新后回填；只存文本与昵称，7 天过期
+    var draftKey = 'yixiu.draft.' + PAGE;
+    var draftTimer = null;
+    function readDraft(){
+      try{
+        var raw = localStorage.getItem(draftKey);
+        if(!raw) return null;
+        var d = JSON.parse(raw);
+        if(!d || typeof d.text !== 'string' || !d.at) return null;
+        if(Date.now() - Number(d.at) > 7 * 24 * 60 * 60 * 1000){ localStorage.removeItem(draftKey); return null; }
+        return d;
+      }catch(e){ return null; }
+    }
+    function saveDraft(){
+      try{
+        if(!contentEl.value && !nameEl.value){ localStorage.removeItem(draftKey); return; }
+        localStorage.setItem(draftKey, JSON.stringify({
+          text: contentEl.value, name: nameEl.value, at: Date.now()
+        }));
+      }catch(e){ /* 隐私模式或容量满：静默降级 */ }
+    }
+    function clearDraft(){
+      try{ localStorage.removeItem(draftKey); }catch(e){}
+    }
+    var draft = readDraft();
+    if(draft){
+      contentEl.value = draft.text || '';
+      if(draft.name) nameEl.value = String(draft.name).slice(0, 24);
+      countEl.textContent = contentEl.value.length + ' / 500';
+    }
+    function onDraftInput(){
+      countEl.textContent = contentEl.value.length + ' / 500';
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(saveDraft, 300);
+    }
+
     // GitHub 登录态：登录后评论自动署名，昵称框让位给身份提示
     var authUser = null;
     function applyAuth(user){
@@ -93,12 +129,17 @@
         if(old) old.parentNode.removeChild(old);
       }
     }
+    // 缓存的公开资料只用于即时展示；只有服务端确认的登录态才能用于评论署名
+    function verifiedUser(d){
+      return (d && d.verified && d.user) ? d.user : null;
+    }
     if(window.YixiuAuth && window.YixiuAuth.state && window.YixiuAuth.state.ready){
-      applyAuth(window.YixiuAuth.state.user);
+      applyAuth(verifiedUser(window.YixiuAuth.state));
     }
     document.addEventListener('yixiu:auth', function(e){
-      var changed = (e.detail && e.detail.user || null) !== authUser;
-      applyAuth(e.detail && e.detail.user);
+      var next = verifiedUser(e.detail);
+      var changed = next !== authUser;
+      applyAuth(next);
       if(changed && stateReady()) load();   // 登录态变化后重载，带上 GitHub 身份
     });
     function stateReady(){
@@ -175,9 +216,8 @@
         })
         .catch(function(){ setStatus('评论服务暂时连不上，请稍后再试。', 'err'); });
     }
-    contentEl.addEventListener('input', function(){
-      countEl.textContent = contentEl.value.length + ' / 500';
-    });
+    contentEl.addEventListener('input', onDraftInput);
+    nameEl.addEventListener('input', onDraftInput);
     form.addEventListener('submit', function(e){
       e.preventDefault();
       var content = contentEl.value.trim();
@@ -199,7 +239,10 @@
         .then(function(r){ return r.json(); })
         .then(function(d){
           if(!d || !d.ok) throw new Error(d && d.error || 'bad_response');
+          clearTimeout(draftTimer);
+          clearDraft();
           contentEl.value = '';
+          nameEl.value = '';
           countEl.textContent = '0 / 500';
           load();
         })

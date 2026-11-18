@@ -8,15 +8,67 @@
   var ENABLE = AUTH.enable === true;
   if(!ENABLE || !API) return;
 
-  var state = { ready:false, configured:false, user:null };
+  // 本地只缓存公开资料，绝不缓存 session token（token 仅存于 HttpOnly Cookie）。
+  // localStorage 按 origin 隔离：blog1 -> 主域切换时不会串数据，首次访问回退为实时校验。
+  var CACHE_KEY = 'yixiu.auth.profile.v1';
+  var CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
-  function fire(){
-    document.dispatchEvent(new CustomEvent('yixiu:auth', { detail: state }));
+  function readCache(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      if(!raw) return null;
+      var c = JSON.parse(raw);
+      if(!c || !c.login || !c.cached_at) return null;
+      if(Date.now() - Number(c.cached_at) > CACHE_TTL){
+        localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+      return {
+        login: String(c.login),
+        avatar_url: safeAvatar(c.avatar_url),
+        html_url: safeAvatar(c.html_url)
+      };
+    }catch(e){ return null; }   // 隐私模式 / 数据损坏：静默降级
   }
 
-  function setUser(user){
+  function writeCache(user){
+    try{
+      if(!user || !user.login){ localStorage.removeItem(CACHE_KEY); return; }
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        login: String(user.login),
+        avatar_url: safeAvatar(user.avatar_url),
+        html_url: safeAvatar(user.html_url),
+        cached_at: Date.now()
+      }));
+    }catch(e){ /* 容量满或被禁用：不影响登录功能 */ }
+  }
+
+  function clearCache(){
+    try{ localStorage.removeItem(CACHE_KEY); }catch(e){}
+  }
+
+  function safeAvatar(raw){
+    try{
+      var u = new URL(String(raw || ''), location.href);
+      return /^https?:$/.test(u.protocol) ? u.href : '';
+    }catch(e){ return ''; }
+  }
+
+  // verified 表示服务端已确认登录态；缓存资料仅为展示，verified=false
+  var state = { ready:false, configured:null, user:null, verified:false };
+
+  function fire(){
+    document.dispatchEvent(new CustomEvent('yixiu:auth', { detail: {
+      ready: state.ready, configured: state.configured,
+      user: state.user, verified: state.verified
+    } }));
+  }
+
+  function setUser(user, verified){
     state.ready = true;
     state.user = user || null;
+    state.verified = !!verified && !!state.user;
+    if(state.verified) writeCache(state.user); else clearCache();
     render();
     fire();
   }
@@ -27,7 +79,8 @@
     slot.innerHTML = '';
 
     // 未配置凭证：正式域名不显示入口；本地预览显示占位按钮，便于确认位置与样式
-    if(!state.configured){
+    // configured 为 null 表示尚未校验完成；此时若有本地缓存资料，先展示头像
+    if(state.configured === false || (state.configured === null && !state.user)){
       var host = String(location.hostname || '').toLowerCase();
       if(host === 'localhost' || host === '127.0.0.1'){
         var demo = document.createElement('button');
@@ -120,17 +173,15 @@
     return fetch(API + '/api/auth/me', { credentials:'include' })
       .then(function(r){ return r.json(); })
       .then(function(d){
-        state.ready = true;
         state.configured = !!(d && d.configured);
-        state.user = (d && d.user) || null;
-        render();
-        fire();
+        if(!state.configured) clearCache();   // 后端不可用：旧缓存不再可信
+        setUser((d && d.user) || null, true);
         return state;
       })
       .catch(function(){
+        // 网络失败：保留缓存仅供展示，verified 仍为 false，评论不会冒充身份
+        state.configured = null;
         state.ready = true;
-        state.configured = false;
-        state.user = null;
         render();
         fire();
         return state;
@@ -147,5 +198,13 @@
     }
   };
 
+  // 先用本地缓存即时渲染（未验证），随后后台校验覆盖
+  var cached = readCache();
+  if(cached){
+    state.user = cached;
+    state.configured = null;
+    render();
+    fire();
+  }
   refresh();
 })();

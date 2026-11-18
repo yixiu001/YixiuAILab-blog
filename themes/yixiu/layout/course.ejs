@@ -38,6 +38,7 @@
   var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
   if(vm) videoId = vm[1];
   var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
+  var videoCover = videoId ? url_for('/images/videos/' + videoId + '.jpg') : '';
 
   // 其他课程（用于课程间切换）
   var otherCourses = courses.filter(function(c){ return c.id !== courseId; }).map(function(c){
@@ -76,8 +77,8 @@
   <article class="content">
     <!-- 视频播放器：有 video 字段才显示，纯图文课程直接展示讲义 -->
     <% if(embedUrl){ %>
-    <div class="player">
-      <iframe src="<%= embedUrl %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="video-embed" data-src="<%= embedUrl %>">
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn">▶</span></button>
     </div>
     <% } else if(page.video){ %>
     <div class="player-fallback"><a href="<%= page.video %>" target="_blank" rel="noopener">▶ 在新窗口观看视频</a></div>

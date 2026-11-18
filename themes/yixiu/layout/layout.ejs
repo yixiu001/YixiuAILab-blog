@@ -5,13 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= page.title ? page.title + ' · ' : '' %><%= config.title %></title>
   <meta name="description" content="<%= page.description || config.description %>">
-  <link rel="stylesheet" href="<%= url_for('/css/style.css') %>">
   <% var authCfg = theme.auth || {}; %>
+  <link rel="preload" as="style" href="<%= assetUrl('/css/style.css') %>">
+  <link rel="stylesheet" href="<%= assetUrl('/css/style.css') %>">
+  <% if(authCfg.enable === true && authCfg.api){ %>
+  <link rel="preconnect" href="<%= authCfg.api %>" crossorigin>
+  <% } %>
   <script>
     window.__YIXIU_AUTH = {
       enable: <%= authCfg.enable === true ? 'true' : 'false' %>,
       api: <%- JSON.stringify(String(authCfg.api || '')).replace(/</g, '\\u003c') %>
     };
+    window.__YIXIU_QR = <%- JSON.stringify(assetUrl('/js/qrcode.min.js')).replace(/</g, '\\u003c') %>;
   </script>
   <%- css([]) %>
 </head>
@@ -19,8 +24,7 @@
   <%- partial('_partial/header') %>
   <main class="page-main"><%- body %></main>
   <%- partial('_partial/footer') %>
-  <script src="<%= url_for('/js/qrcode.min.js') %>"></script>
-  <script src="<%= url_for('/js/auth.js') %>"></script>
-  <script src="<%= url_for('/js/main.js') %>"></script>
+  <script defer src="<%= assetUrl('/js/auth.js') %>"></script>
+  <script defer src="<%= assetUrl('/js/main.js') %>"></script>
 </body>
 </html>

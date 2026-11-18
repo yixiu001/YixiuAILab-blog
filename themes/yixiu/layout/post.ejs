@@ -6,6 +6,7 @@
   var vm = String(page.video || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
   if(vm) videoId = vm[1];
   var embedUrl = videoId ? 'https://www.youtube.com/embed/' + videoId : '';
+  var videoCover = videoId ? url_for('/images/videos/' + videoId + '.jpg') : '';
   var isVideo = !!videoId;
 
   // 阅读时长估算（按正文纯文本字数，约 350 字/分钟）
@@ -68,8 +69,8 @@
 
     <!-- 封面：视频文章显示播放器，纯图文显示封面图 -->
     <% if(embedUrl){ %>
-    <div class="player post-player">
-      <iframe src="<%= embedUrl %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="video-embed" data-src="<%= embedUrl %>">
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn">▶</span></button>
     </div>
     <% } else if(page.cover){ %>
     <div class="post-cover"><img src="<%= url_for(page.cover) %>" alt="<%= page.title %>"></div>

@@ -1,3 +1,22 @@
+/* 界面偏好：只保存公开的筛选/列表选择，不保存任何身份或凭证 */
+(function(){
+  var KEY = 'yixiu.pref.v1';
+  var data = {};
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){ var p = JSON.parse(raw); if(p && typeof p === 'object') data = p; }
+  }catch(e){ /* 隐私模式或数据损坏：用空偏好 */ }
+  window.YixiuPref = {
+    get: function(k, fallback){
+      return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : fallback;
+    },
+    set: function(k, v){
+      data[k] = v;
+      try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+    }
+  };
+})();
+
 /* 一休主题 · 交互 */
 (function(){
   // tabs：用 panes 的 data-title 生成头部
@@ -48,17 +67,23 @@
   // 视频列表页分类筛选
   var pageChips = document.querySelectorAll('.page-chips .chip');
   if(pageChips.length){
-    pageChips.forEach(function(chip){
-      chip.addEventListener('click', function(){
-        pageChips.forEach(function(x){ x.classList.remove('on'); });
-        chip.classList.add('on');
-        var cat = chip.getAttribute('data-cat');
-        document.querySelectorAll('.video-grid .vcard').forEach(function(card){
-          var show = (cat === '全部') || (card.getAttribute('data-cat') === cat);
-          card.style.display = show ? '' : 'none';
-        });
+    function applyPageFilter(chip){
+      pageChips.forEach(function(x){ x.classList.remove('on'); });
+      chip.classList.add('on');
+      var cat = chip.getAttribute('data-cat');
+      window.YixiuPref.set('pageCat', cat);
+      document.querySelectorAll('.video-grid .vcard').forEach(function(card){
+        var show = (cat === '全部') || (card.getAttribute('data-cat') === cat);
+        card.style.display = show ? '' : 'none';
       });
+    }
+    pageChips.forEach(function(chip){
+      chip.addEventListener('click', function(){ applyPageFilter(chip); });
     });
+    var savedPageCat = window.YixiuPref.get('pageCat', '');
+    for(var pi = 0; pi < pageChips.length; pi++){
+      if(pageChips[pi].getAttribute('data-cat') === savedPageCat){ applyPageFilter(pageChips[pi]); break; }
+    }
   }
 
   // 课程中心：分类筛选（锚点跳转兼容 location.hash）
@@ -68,6 +93,7 @@
     var hubCards = document.querySelectorAll('#hub-grid .hub-course');
     var hubEmpty = document.getElementById('hub-empty');
     function applyHubFilter(cat){
+      window.YixiuPref.set('hubCat', cat);
       hubChips.forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-cat') === cat); });
       var visible = 0;
       hubCards.forEach(function(card){
@@ -81,9 +107,22 @@
       chip.addEventListener('click', function(){ applyHubFilter(chip.getAttribute('data-cat')); });
     });
     // URL 带 hash 且对应课程存在时，自动切到该课程的分类，保证锚点可达
+    var hashHandled = false;
     if(location.hash && location.hash.length > 1){
       var target = document.querySelector(location.hash);
-      if(target && target.classList.contains('hub-course')) applyHubFilter(target.getAttribute('data-cat'));
+      if(target && target.classList.contains('hub-course')){
+        applyHubFilter(target.getAttribute('data-cat'));
+        hashHandled = true;
+      }
+    }
+    // 无锚点时恢复上次筛选
+    if(!hashHandled){
+      var savedHub = window.YixiuPref.get('hubCat', 'all');
+      if(savedHub && savedHub !== 'all'){
+        var hubExists = false;
+        hubChips.forEach(function(x){ if(x.getAttribute('data-cat') === savedHub) hubExists = true; });
+        if(hubExists) applyHubFilter(savedHub);
+      }
     }
   }
 
@@ -105,20 +144,28 @@
     var afChips = archiveFilter.querySelectorAll('.af-chip');
     var afRows = document.querySelectorAll('#archive-list .arow');
     var afEmpty = document.getElementById('archive-empty');
-    afChips.forEach(function(chip){
-      chip.addEventListener('click', function(){
-        afChips.forEach(function(x){ x.classList.remove('on'); });
-        chip.classList.add('on');
-        var kind = chip.getAttribute('data-kind');
-        var visible = 0;
-        afRows.forEach(function(row){
-          var show = (kind === 'all') || (row.getAttribute('data-kind') === kind);
-          row.style.display = show ? '' : 'none';
-          if(show) visible++;
-        });
-        if(afEmpty) afEmpty.hidden = visible !== 0;
+    function applyArchiveFilter(chip){
+      afChips.forEach(function(x){ x.classList.remove('on'); });
+      chip.classList.add('on');
+      var kind = chip.getAttribute('data-kind');
+      window.YixiuPref.set('archiveKind', kind);
+      var visible = 0;
+      afRows.forEach(function(row){
+        var show = (kind === 'all') || (row.getAttribute('data-kind') === kind);
+        row.style.display = show ? '' : 'none';
+        if(show) visible++;
       });
+      if(afEmpty) afEmpty.hidden = visible !== 0;
+    }
+    afChips.forEach(function(chip){
+      chip.addEventListener('click', function(){ applyArchiveFilter(chip); });
     });
+    var savedKind = window.YixiuPref.get('archiveKind', 'all');
+    if(savedKind){
+      for(var ai = 0; ai < afChips.length; ai++){
+        if(afChips[ai].getAttribute('data-kind') === savedKind){ applyArchiveFilter(afChips[ai]); break; }
+      }
+    }
   }
 
   // 文章页：顶部阅读进度条（随正文滚动）
@@ -316,9 +363,7 @@
   if(!btn || !pop || !box) return;
 
   var made = false;
-  function buildQR(){
-    if(made) return;
-    made = true;
+  function drawQR(){
     try{
       var url = window.location.href.split('#')[0];
       var qr = window.qrcode(0, 'M');       // typeNumber 0 = 自动按内容长度选版本
@@ -328,6 +373,19 @@
     }catch(e){
       box.innerHTML = '<span style="font-size:12px;color:#666">二维码生成失败</span>';
     }
+  }
+  function buildQR(){
+    if(made) return;
+    made = true;
+    if(window.qrcode){ drawQR(); return; }
+    // 二维码库只在用户点击时出现时才加载，不占用首屏带宽
+    var s = document.createElement('script');
+    s.src = window.__YIXIU_QR || '/js/qrcode.min.js';
+    s.onload = drawQR;
+    s.onerror = function(){
+      box.innerHTML = '<span style="font-size:12px;color:#666">二维码库加载失败</span>';
+    };
+    document.head.appendChild(s);
   }
   function openPop(){
     buildQR();

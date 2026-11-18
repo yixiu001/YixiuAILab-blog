@@ -1,7 +1,7 @@
 <footer class="footer">
   <div class="wrap">
     <div class="top">
-      <a href="<%= url_for('/') %>" class="footer-brand"><img src="<%= url_for(theme.logo_image) %>" alt="" class="footer-logo"><%= theme.logo %></a>
+      <a href="<%= url_for('/') %>" class="footer-brand"><img src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt="" class="footer-logo brand-mark"><%= theme.logo %></a>
       <div class="links">
         <% theme.nav.forEach(function(item){ %>
         <a href="<%= url_for(item.url) %>"><%= item.text %></a>

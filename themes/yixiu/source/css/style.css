@@ -11,9 +11,11 @@ a{text-decoration:none;color:inherit}
 .topbar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+.logo-img.brand-mark{border-radius:8px;border:0;object-fit:contain;width:38px;height:38px}
 .logo-txt{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .footer-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:#fff}
 .footer-logo{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #444}
+.footer-logo.brand-mark{border-radius:6px;border:0;object-fit:contain;width:34px;height:34px}
 .nav{display:flex;align-items:center;gap:34px}
 .nav a{font-size:15px;color:var(--text-2);transition:.2s}
 .nav a.active,.nav a:hover{color:var(--text)}.nav a.active{font-weight:600}

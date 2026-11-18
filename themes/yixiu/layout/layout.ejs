@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="<%= url_for('/favicon.ico') %>">
+  <link rel="icon" type="image/png" sizes="192x192" href="<%= url_for('/favicon-192.png') %>">
+  <link rel="apple-touch-icon" href="<%= url_for('/apple-touch-icon.png') %>">
   <title><%= page.title ? page.title + ' · ' : '' %><%= config.title %></title>
   <%
     var seoBase = String(config.url || '').replace(/\/+$/, '');

@@ -2,8 +2,11 @@
 # 一休定制主题 · 配置
 # --------------------------------------------------
 
-# 站点 Logo（头像图片 + 名称）
+# 站点 Logo
+# brand_logo：品牌标识（六边形 AI 实验室徽章），用于顶栏/页脚品牌位
+# logo_image：主讲人头像，用于关于/课程/文章/打赏的讲师身份位
 logo: 一休AI实验室
+brand_logo: /images/logo.png
 logo_image: /images/avatar.jpg
 
 # 顶部导航

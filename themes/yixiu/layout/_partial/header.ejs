@@ -1,7 +1,7 @@
 <header class="topbar">
   <div class="wrap">
     <a href="<%= url_for('/') %>" class="logo">
-      <img src="<%= url_for(theme.logo_image) %>" alt="<%= theme.logo %>" class="logo-img">
+      <img src="<%= url_for(theme.brand_logo || theme.logo_image) %>" alt="<%= theme.logo %>" class="logo-img brand-mark">
       <span class="logo-txt"><%= theme.logo %></span>
     </a>
     <nav class="nav">

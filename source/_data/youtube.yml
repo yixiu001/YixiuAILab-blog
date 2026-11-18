@@ -26,8 +26,8 @@ videos:
     views: 1865
     viewsText: "1865"
     published: "7个月前"
-    category: "账号教程"
-    url: "/posts/google-account/"
+    category: "其他"
+    url: "https://www.youtube.com/watch?v=2XJUSpqGRWE"
     youtube: "https://www.youtube.com/watch?v=2XJUSpqGRWE"
     cover: "/images/videos/2XJUSpqGRWE.jpg"
   - id: h9PJK64By4E
@@ -44,7 +44,7 @@ videos:
     views: 7285
     viewsText: "7285"
     published: "11个月前"
-    category: "账号教程"
-    url: "/posts/tg-account/"
+    category: "其他"
+    url: "https://www.youtube.com/watch?v=-Lj0qYi_C6Q"
     youtube: "https://www.youtube.com/watch?v=-Lj0qYi_C6Q"
     cover: "/images/videos/-Lj0qYi_C6Q.jpg"

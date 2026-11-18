@@ -15,9 +15,8 @@ var IMG_DIR = path.join(__dirname, '..', 'source', 'images', 'videos');
 var THEME_IMG_DIR = path.join(__dirname, '..', 'themes', 'yixiu', 'source', 'images', 'videos');
 
 // 视频 ID → 站内讲义文章 / 分类（YouTube 只提供视频数据，这些是本站自有映射）
+// 仅映射仍有站内讲义的文章；无映射的视频自动 fallback 到 YouTube 原链接
 var VIDEO_META = {
-  '2XJUSpqGRWE': { localUrl: '/posts/google-account/', category: '账号教程' },
-  '-Lj0qYi_C6Q': { localUrl: '/posts/tg-account/', category: '账号教程' },
   'h9PJK64By4E': { localUrl: '/posts/apple-id/', category: '海外工具' },
   'kTVRMm4J5pw': { localUrl: '/posts/biyapay/', category: '支付充值' }
 };

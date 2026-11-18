@@ -4,7 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= page.title ? page.title + ' · ' : '' %><%= config.title %></title>
-  <meta name="description" content="<%= page.description || config.description %>">
+  <%
+    var seoBase = String(config.url || '').replace(/\/+$/, '');
+    var seoRel = String(page.path || '').replace(/^\/+/, '');
+    if (seoRel === 'index.html') seoRel = '';
+    var seoCanonical = seoRel ? (seoBase + '/' + seoRel.replace(/\/$/, '') + '/') : (seoBase + '/');
+    var seoDesc = page.description || page.summary || config.description || '';
+    var seoTitle = page.title ? (page.title + ' · ' + config.title) : config.title;
+    var seoCover = String(page.cover || '');
+    var seoImage = /^https?:\/\//i.test(seoCover)
+      ? seoCover
+      : (seoCover ? seoBase + '/' + seoCover.replace(/^\/+/, '') : seoBase + '/images/avatar.jpg');
+    var seoType = (page.layout === 'post' || page.layout === 'course') ? 'article' : 'website';
+  %>
+  <meta name="description" content="<%= seoDesc %>">
+  <link rel="canonical" href="<%= seoCanonical %>">
+  <meta property="og:type" content="<%= seoType %>">
+  <meta property="og:site_name" content="<%= config.title %>">
+  <meta property="og:title" content="<%= seoTitle %>">
+  <meta property="og:description" content="<%= seoDesc %>">
+  <meta property="og:url" content="<%= seoCanonical %>">
+  <meta property="og:image" content="<%= seoImage %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= seoTitle %>">
+  <meta name="twitter:description" content="<%= seoDesc %>">
+  <meta name="twitter:image" content="<%= seoImage %>">
   <% var authCfg = theme.auth || {}; %>
   <link rel="preload" as="style" href="<%= assetUrl('/css/style.css') %>">
   <link rel="stylesheet" href="<%= assetUrl('/css/style.css') %>">

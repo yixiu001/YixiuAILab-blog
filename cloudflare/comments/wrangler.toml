@@ -29,7 +29,7 @@ custom_domain = true
 # 跨域白名单：只允许本站与本地预览调用 API，避免被第三方站点滥用。
 # 以后换端口或加域名，在下面逗号分隔列表里追加即可。
 [vars]
-ALLOW_ORIGIN = "https://yixiu521.com,https://www.yixiu521.com,http://localhost:4000,http://127.0.0.1:4000"
+ALLOW_ORIGIN = "https://yixiu521.com,https://www.yixiu521.com,https://blog1.yixiu521.com,http://localhost:4000,http://127.0.0.1:4000"
 # GitHub 授权失败时的兜底回跳地址（不带尾斜杠）
 SITE_URL = "https://yixiu521.com"
 

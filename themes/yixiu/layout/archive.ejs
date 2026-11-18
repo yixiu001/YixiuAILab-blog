@@ -7,13 +7,6 @@
   };
   var videoTotal = all.filter(isVideoPost).length;
   var textTotal = all.length - videoTotal;
-  // 分类配色：按分类名稳定映射到一组柔和色
-  var toneList = ['a','b','c','d','e','f'];
-  function catTone(name){
-    var s = String(name || ''), sum = 0;
-    for(var i=0;i<s.length;i++){ sum += s.charCodeAt(i); }
-    return toneList[sum % toneList.length];
-  }
 %>
 <div class="wrap">
   <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span>文章归档</div>
@@ -34,8 +27,8 @@
 
   <div class="archive-filter" id="archive-filter" role="group" aria-label="按类型筛选文章">
     <button class="af-chip on" data-kind="all" type="button">全部 <span><%= all.length %></span></button>
-    <button class="af-chip" data-kind="video" type="button">▶ 视频讲义 <span><%= videoTotal %></span></button>
-    <button class="af-chip" data-kind="text" type="button">✎ 图文文章 <span><%= textTotal %></span></button>
+    <button class="af-chip" data-kind="video" type="button"><svg class="sicon"><use href="#i-play"></use></svg> 视频讲义 <span><%= videoTotal %></span></button>
+    <button class="af-chip" data-kind="text" type="button"><svg class="sicon"><use href="#i-pencil"></use></svg> 图文文章 <span><%= textTotal %></span></button>
   </div>
 
   <div class="article-list" id="archive-list">
@@ -45,10 +38,10 @@
     <% var cname = cObj ? cObj.name : '文章'; %>
     <a href="<%= url_for(post.path) %>" class="arow" data-kind="<%= isVideo ? 'video' : 'text' %>">
       <span class="arow-idx"><%= ('0' + (idx + 1)).slice(-2) %></span>
-      <span class="arow-mark <%= isVideo ? 'video' : 'text' %>"><%= isVideo ? '▶' : '✎' %></span>
+      <span class="arow-mark <%= isVideo ? 'video' : 'text' %>"><svg class="sicon"><use href="#i-<%= isVideo ? 'play' : 'pencil' %>"></use></svg></span>
       <span class="amid">
-        <span class="arow-line"><span class="acat tone-<%= catTone(cname) %>"><%= cname %></span><h3><%= post.title %></h3></span>
-        <span class="arow-tags"><% post.tags.each(function(t, j){ %><%= j > 0 ? ' · ' : '' %>#<%= t.name %><% }); %></span>
+        <span class="arow-line"><h3><%= post.title %></h3></span>
+        <span class="arow-tags"><%= cname %> · <% post.tags.each(function(t, j){ %><%= j > 0 ? ' · ' : '' %>#<%= t.name %><% }); %></span>
       </span>
       <span class="adate"><%= date(post.date, 'MM-DD') %></span>
       <span class="arow-arrow">→</span>

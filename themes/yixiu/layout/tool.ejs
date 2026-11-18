@@ -23,12 +23,12 @@
         <div class="td-hero-info">
           <div class="td-badges">
             <a class="td-group" href="<%= url_for('/resources/') %>"><%= group.icon || '' %> <%= group.name || '工具' %></a>
-            <% if(tool.featured){ %><span class="td-featured">★ 精选工具</span><% } %>
+            <% if(tool.featured){ %><span class="td-featured"><svg class="sicon"><use href="#i-star"></use></svg> 精选工具</span><% } %>
           </div>
           <h1><%= tool.name %></h1>
           <p class="td-desc"><%= tool.desc %></p>
           <a href="<%= tool.url %>" class="td-cta" target="_blank" rel="noopener noreferrer">
-            访问官网 <span>↗</span>
+            访问官网 <span><svg class="sicon"><use href="#i-arrow-top-right"></use></svg></span>
           </a>
         </div>
       </header>

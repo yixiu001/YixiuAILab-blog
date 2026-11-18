@@ -38,17 +38,17 @@
       <div class="post-head-top">
         <span class="post-cat"><%= cat %></span>
         <% if(isVideo){ %>
-        <span class="post-kind">▶ 视频讲义</span>
+        <span class="post-kind"><svg class="sicon"><use href="#i-play"></use></svg> 视频讲义</span>
         <% } else { %>
-        <span class="post-kind plain">✎ 图文文章</span>
+        <span class="post-kind plain"><svg class="sicon"><use href="#i-pencil"></use></svg> 图文文章</span>
         <% } %>
       </div>
       <h1><%= page.title %></h1>
       <div class="post-meta">
         <span class="pm-author"><img src="<%= url_for(theme.logo_image) %>" alt="" class="avatar"> <%= theme.creator.name %></span>
         <span class="pm-dot">·</span>
-        <% if(page.date){ %><span class="pm-item">◈ <%= fmtFull(page.date) %></span><span class="pm-dot">·</span><% } %>
-        <span class="pm-item">◷ 约 <%= readMin %> 分钟读完</span>
+        <% if(page.date){ %><span class="pm-item"><svg class="sicon"><use href="#i-calendar"></use></svg> <%= fmtFull(page.date) %></span><span class="pm-dot">·</span><% } %>
+        <span class="pm-item"><svg class="sicon"><use href="#i-clock"></use></svg> 约 <%= readMin %> 分钟读完</span>
       </div>
       <% if(page.tags && page.tags.length){ %>
       <div class="post-tags">
@@ -63,14 +63,14 @@
   <div class="post-main-col">
     <!-- 移动端目录（桌面显示右侧悬浮目录） -->
     <details class="toc-m" id="toc-m" hidden>
-      <summary><span class="toc-m-ic">☰</span> 文章目录 <span class="toc-m-count" id="toc-m-count"></span><span class="toc-m-arrow">⌄</span></summary>
+      <summary><span class="toc-m-ic"><svg class="sicon"><use href="#i-menu"></use></svg></span> 文章目录 <span class="toc-m-count" id="toc-m-count"></span><span class="toc-m-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span></summary>
       <nav class="toc-list" id="toc-m-list" aria-label="文章目录"></nav>
     </details>
 
     <!-- 封面：视频文章显示播放器，纯图文显示封面图 -->
     <% if(embedUrl){ %>
     <div class="video-embed" data-src="<%= embedUrl %>">
-      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn">▶</span></button>
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
     </div>
     <% } else if(page.cover){ %>
     <div class="post-cover"><img src="<%= url_for(page.cover) %>" alt="<%= page.title %>"></div>
@@ -99,7 +99,7 @@
       <% var rpCat = rpCatObj && rpCatObj.name ? rpCatObj.name : '文章'; %>
       <a href="<%= url_for(p.path) %>" class="rel-card">
         <div class="rel-cover g<%= i % 3 %>">
-          <span class="rel-glyph"><%= relVideo(p) ? '▶' : rpCat.charAt(0) %></span>
+          <span class="rel-glyph"><% if(relVideo(p)){ %><svg class="sicon"><use href="#i-play"></use></svg><% } else { %><%= rpCat.charAt(0) %><% } %></span>
           <span class="rel-cat"><%= rpCat %><%= relVideo(p) ? ' · 视频' : '' %></span>
         </div>
         <div class="rel-body">
@@ -125,7 +125,7 @@
 
   <!-- 桌面端目录：grid 第二行右栏，顶部与正文对齐；滚动时 sticky 吸附 -->
   <aside class="toc" id="toc" aria-label="文章目录" hidden>
-    <div class="toc-head"><span class="toc-ic">☰</span><b>文章目录</b><span class="toc-count" id="toc-count"></span></div>
+    <div class="toc-head"><span class="toc-ic"><svg class="sicon"><use href="#i-menu"></use></svg></span><b>文章目录</b><span class="toc-count" id="toc-count"></span></div>
     <nav class="toc-list" id="toc-list"></nav>
     <div class="toc-foot"><span>滚动时自动定位当前章节</span><button type="button" class="toc-top" id="toc-top">↑ 顶部</button></div>
   </aside>

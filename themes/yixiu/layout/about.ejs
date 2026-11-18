@@ -42,9 +42,9 @@
   var chDesc  = { yt: '视频教程与工具测评', tg: '图文速递与更新提醒', gh: '开源配置与工具仓库' };
 
   var doCards = [
-    { icon: '▶', kind: '视频讲义', title: '看得见的演示', desc: 'AI 工具测评、效率技巧与免费资源分享，每一步都配真实操作演示，跟着做就能复现。', num: videoPosts + ' 篇', btn: '看视频讲义', url: '/archives/' },
-    { icon: '✎', kind: '图文文章', title: '留得下的步骤', desc: '所有视频配套讲义都会沉淀成图文文章，方便随时查阅、搜索和按自己的节奏复用。', num: textPosts + ' 篇', btn: '浏览全部文章', url: '/archives/' },
-    { icon: '◈', kind: '体系课程', title: '串得起的路径', desc: '体系化的实战课程，视频 + 讲义结合，从环境搭建到落地发布，完整走通一条路径。', num: courses.length + ' 门', btn: '开始学习课程', url: '/courses/' }
+    { icon: 'play', kind: '视频讲义', title: '看得见的演示', desc: 'AI 工具测评、效率技巧与免费资源分享，每一步都配真实操作演示，跟着做就能复现。', num: videoPosts + ' 篇', btn: '看视频讲义', url: '/archives/' },
+    { icon: 'pencil', kind: '图文文章', title: '留得下的步骤', desc: '所有视频配套讲义都会沉淀成图文文章，方便随时查阅、搜索和按自己的节奏复用。', num: textPosts + ' 篇', btn: '浏览全部文章', url: '/archives/' },
+    { icon: 'grid', kind: '体系课程', title: '串得起的路径', desc: '体系化的实战课程，视频 + 讲义结合，从环境搭建到落地发布，完整走通一条路径。', num: courses.length + ' 门', btn: '开始学习课程', url: '/courses/' }
   ];
 %>
 <div class="wrap ab-page">
@@ -67,13 +67,13 @@
         <% if(slogan){ %><p class="ab-tagline"><%= slogan %></p><% } %>
         <p class="ab-desc"><%= creator.desc || page.description %></p>
         <div class="ab-hero-btns">
-          <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><span class="ab-btn-ic">▶</span><%= creator.btn_text || '订阅频道' %></a>
+          <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><svg class="sicon ab-btn-ic"><use href="#i-youtube"></use></svg><%= creator.btn_text || '订阅频道' %></a>
           <a href="<%= url_for('/courses/') %>" class="ab-btn-ghost">浏览课程 <span>→</span></a>
         </div>
         <% if(channels.length){ %>
         <div class="ab-social">
           <% channels.forEach(function(ch){ %>
-          <a href="<%= ch.url %>" class="ab-social-btn" target="_blank" rel="noopener" title="<%= ch.name %>" aria-label="<%= ch.name %>"><%= ch.icon %></a>
+          <a href="<%= ch.url %>" class="ab-social-btn" target="_blank" rel="noopener" title="<%= ch.name %>" aria-label="<%= ch.name %>"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg></a>
           <% }); %>
         </div>
         <% } %>
@@ -102,7 +102,7 @@
       <% doCards.forEach(function(c, i){ %>
       <a href="<%= url_for(c.url) %>" class="ab-do-card">
         <div class="ab-do-top">
-          <span class="ab-do-icon"><%= c.icon %></span>
+          <span class="ab-do-icon"><svg class="sicon"><use href="#i-<%= c.icon %>"></use></svg></span>
           <span class="ab-do-no">0<%= i + 1 %></span>
         </div>
         <span class="ab-do-kind"><%= c.kind %></span>
@@ -139,12 +139,12 @@
     <div class="ab-channel-grid">
       <% channels.forEach(function(ch){ %>
       <a href="<%= ch.url %>" class="ab-channel ab-ch-<%= ch.class %>" target="_blank" rel="noopener">
-        <span class="ab-channel-icon"><%= ch.icon %></span>
+        <span class="ab-channel-icon"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg></span>
         <div class="ab-channel-main">
           <div class="ab-channel-name"><%= ch.name %></div>
           <div class="ab-channel-desc"><%= chDesc[ch.class] || '内容更新与分享' %></div>
         </div>
-        <span class="ab-channel-go">↗</span>
+        <span class="ab-channel-go"><svg class="sicon"><use href="#i-arrow-top-right"></use></svg></span>
       </a>
       <% }); %>
     </div>
@@ -178,7 +178,7 @@
     </div>
     <% } else { %>
     <div class="sup-empty">
-      <span class="sup-empty-ic">☕</span>
+      <span class="sup-empty-ic"><svg class="sicon"><use href="#i-coffee"></use></svg></span>
       <div>
         <b>第一个位置，还空着</b>
         <p>还没有打赏记录。等第一位朋友出现，这里就会亮起来。</p>
@@ -196,7 +196,7 @@
     <h2>一起把知识流动起来</h2>
     <p>如果你有合作、交流或内容建议，欢迎通过频道私信我。<br>分享好工具，让知识免费流动。</p>
     <div class="ab-contact-btns">
-      <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><span class="ab-btn-ic">▶</span><%= creator.btn_text || '订阅频道' %></a>
+      <a href="<%= subUrl %>" class="ab-btn-primary" target="_blank" rel="noopener"><svg class="sicon ab-btn-ic"><use href="#i-youtube"></use></svg><%= creator.btn_text || '订阅频道' %></a>
       <a href="<%= url_for('/resources/') %>" class="ab-btn-ghost">逛逛工具导航 <span>→</span></a>
     </div>
   </section>

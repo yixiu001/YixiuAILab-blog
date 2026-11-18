@@ -56,9 +56,9 @@ creator:
   btn_text: 订阅频道
   btn_url: https://www.youtube.com/@YixiuAILab
   channels:
-    - { name: YouTube, icon: ▶, url: https://www.youtube.com/@YixiuAILab, class: yt }
-    - { name: Telegram 频道, icon: ✈, url: https://t.me, class: tg }
-    - { name: GitHub 仓库, icon: ⌥, url: https://github.com, class: gh }
+    - { name: YouTube, icon: youtube, url: https://www.youtube.com/@YixiuAILab, class: yt }
+    - { name: Telegram 频道, icon: telegram, url: https://t.me, class: tg }
+    - { name: GitHub 仓库, icon: github, url: https://github.com, class: gh }
 
 # --------------------------------------------------
 # 评论区（文章页 + 课程章节页）

@@ -44,7 +44,7 @@
       <% if(c.cover){ %>
       <img src="<%= url_for(c.cover) %>" alt="<%= c.title %>" loading="lazy">
       <% } else { %>
-      <div class="hub-media-empty"><span>▦</span><small>图文讲义课</small></div>
+      <div class="hub-media-empty"><span><svg class="sicon"><use href="#i-grid"></use></svg></span><small>图文讲义课</small></div>
       <% } %>
       <% if(c.category){ %><span class="hub-media-cat"><%= c.category %></span><% } %>
       <span class="hub-media-count"><%= cnt %> 节</span>
@@ -59,7 +59,7 @@
       </div>
       <div class="hub-actions">
         <% if(first){ %><a href="<%= url_for(first.path) %>" class="hub-cta-btn">开始学习 <span>→</span></a><% } %>
-        <button class="hub-toggle" type="button" aria-expanded="false" aria-controls="chapters-<%= c.id %>">查看目录 <span class="hub-toggle-arrow">⌄</span></button>
+        <button class="hub-toggle" type="button" aria-expanded="false" aria-controls="chapters-<%= c.id %>">查看目录 <span class="hub-toggle-arrow"><svg class="sicon"><use href="#i-chevron-down"></use></svg></span></button>
       </div>
     </div>
     <div class="hub-chapters" id="chapters-<%= c.id %>" hidden>

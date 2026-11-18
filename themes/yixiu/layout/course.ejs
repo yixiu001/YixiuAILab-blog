@@ -78,19 +78,19 @@
     <!-- 视频播放器：有 video 字段才显示，纯图文课程直接展示讲义 -->
     <% if(embedUrl){ %>
     <div class="video-embed" data-src="<%= embedUrl %>">
-      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn">▶</span></button>
+      <button type="button" class="vcover" aria-label="点击播放视频"<% if(videoCover){ %> style="background-image:url('<%= videoCover %>')"<% } %>><span class="vbtn"><svg class="sicon"><use href="#i-play"></use></svg></span></button>
     </div>
     <% } else if(page.video){ %>
-    <div class="player-fallback"><a href="<%= page.video %>" target="_blank" rel="noopener">▶ 在新窗口观看视频</a></div>
+    <div class="player-fallback"><a href="<%= page.video %>" target="_blank" rel="noopener"><svg class="sicon"><use href="#i-play"></use></svg> 在新窗口观看视频</a></div>
     <% } %>
 
     <!-- 讲义标题 -->
     <div class="lesson-head">
       <h2><%= page.lesson_title || title %></h2>
       <div class="lesson-stats">
-        <% if(page.duration){ %><span>◷ <%= page.duration %></span><% } %>
+        <% if(page.duration){ %><span><svg class="sicon"><use href="#i-clock"></use></svg> <%= page.duration %></span><% } %>
         <% if(page.views){ %><span>◉ <%= page.views %>次观看</span><% } %>
-        <% if(page.date){ %><span>◈ 更新于 <%= date(page.date, 'YYYY-MM-DD') %></span><% } %>
+        <% if(page.date){ %><span><svg class="sicon"><use href="#i-calendar"></use></svg> 更新于 <%= date(page.date, 'YYYY-MM-DD') %></span><% } %>
         <% (page.tags || []).forEach(function(t){ %><span>＃<%= typeof t === 'string' ? t : t.name %></span><% }); %>
       </div>
     </div>
@@ -147,7 +147,7 @@
     <div class="side-card side-courses">
       <div class="ch"><div class="t">其他课程</div></div>
       <% otherCourses.forEach(function(c){ %>
-      <a href="<%= c.path %>" class="side-course"><span class="sc-ic">▦</span><span class="sc-tx"><b><%= c.title %></b><small><%= c.count %> 节</small></span><span class="sc-ar">→</span></a>
+      <a href="<%= c.path %>" class="side-course"><span class="sc-ic"><svg class="sicon"><use href="#i-grid"></use></svg></span><span class="sc-tx"><b><%= c.title %></b><small><%= c.count %> 节</small></span><span class="sc-ar">→</span></a>
       <% }); %>
       <a href="<%= url_for('/courses/') %>" class="side-course-all">查看全部课程 →</a>
     </div>
@@ -157,7 +157,7 @@
       <p><%= theme.creator.desc %></p>
       <div class="stats"><div><b><%= yt.subscribersText || '—' %></b>订阅</div><div><b><%= yt.videoCount != null ? yt.videoCount : '—' %></b>视频</div><div><b><%= courses.length %></b>课程</div></div></div></div>
     <div class="side-card"><div class="channels"><div class="t">关注我的频道</div>
-      <% theme.creator.channels.forEach(function(ch){ %><a class="ch <%= ch.class %>" href="<%= ch.url %>" target="_blank" rel="noopener"><span class="ico"><%= ch.icon %></span><%= ch.name %><span class="arw">→</span></a><% }); %>
+      <% theme.creator.channels.forEach(function(ch){ %><a class="ch <%= ch.class %>" href="<%= ch.url %>" target="_blank" rel="noopener"><span class="ico"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg></span><%= ch.name %><span class="arw">→</span></a><% }); %>
     </div></div>
   </aside>
 </main>

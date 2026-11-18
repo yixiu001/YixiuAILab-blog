@@ -198,13 +198,24 @@
     }
   };
 
-  // 先用本地缓存即时渲染（未验证），随后后台校验覆盖
+  // 先用本地缓存即时渲染（未验证），校验延后到浏览器空闲，首屏不等 0.6s 的 /api/auth/me
+  function scheduleRefresh(delay){
+    var run = function(){ refresh(); };
+    if(typeof requestIdleCallback === 'function'){
+      requestIdleCallback(run, { timeout: 2500 });
+    }else{
+      setTimeout(run, delay);
+    }
+  }
   var cached = readCache();
+  var fromAuthFlow = /[?&]auth_error=/.test(location.search);
   if(cached){
     state.user = cached;
     state.configured = null;
     render();
     fire();
   }
-  refresh();
+  // 刚从 OAuth 回调跳回时必须立刻校验，否则登录态不会即时出现
+  if(fromAuthFlow) refresh();
+  else scheduleRefresh(cached ? 1200 : 300);
 })();

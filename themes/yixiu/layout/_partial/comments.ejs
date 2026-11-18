@@ -140,7 +140,7 @@
       var next = verifiedUser(e.detail);
       var changed = next !== authUser;
       applyAuth(next);
-      if(changed && stateReady()) load();   // 登录态变化后重载，带上 GitHub 身份
+      if(changed && loaded && stateReady()) load();   // 已加载才重载；未加载则等进入视口时用当前身份加载
     });
     function stateReady(){
       return !!(window.YixiuAuth && window.YixiuAuth.state && window.YixiuAuth.state.ready);
@@ -202,7 +202,9 @@
         listEl.appendChild(card);
       });
     }
+    var loaded = false;   // 评论区是否已进入视口并加载过
     function load(){
+      loaded = true;
       setStatus('正在加载评论…');
       // 未登录时不带凭证：兼容尚未升级的后端，也避免无谓的跨域凭证请求
       var opt = { method:'GET' };
@@ -215,6 +217,17 @@
           setStatus('');
         })
         .catch(function(){ setStatus('评论服务暂时连不上，请稍后再试。', 'err'); });
+    }
+    // 评论区滚入视口才发请求，文章首屏不再等待 0.8s 的跨洲 D1 查询
+    function setupLazyLoad(){
+      var block = document.getElementById('comments') || listEl;
+      if(!block || !('IntersectionObserver' in window)){ load(); return; }
+      var io = new IntersectionObserver(function(entries){
+        for(var i = 0; i < entries.length; i++){
+          if(entries[i].isIntersecting){ io.disconnect(); load(); break; }
+        }
+      }, { rootMargin: '200px 0px' });   // 提前 200px 预加载，滚动时无感
+      io.observe(block);
     }
     contentEl.addEventListener('input', onDraftInput);
     nameEl.addEventListener('input', onDraftInput);
@@ -254,7 +267,7 @@
           submitEl.textContent = '发表评论';
         });
     });
-    load();
+    setupLazyLoad();
   })();
   </script>
 

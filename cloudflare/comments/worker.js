@@ -144,13 +144,29 @@ function authConfigured(env) {
   return !!(String(env.GITHUB_CLIENT_ID || '').trim() && String(env.GITHUB_CLIENT_SECRET || '').trim());
 }
 
-async function currentUser(request, env) {
+// ---------- D1 Sessions API：读走就近副本，写走主库 ----------
+// 未开启读复制时 withSession 依然可用（查询落到主库），因此代码可先部署，
+// Dashboard 开启读复制后无需再改代码即可生效。
+function readDB(env) {
+  return (env.DB && typeof env.DB.withSession === 'function')
+    ? env.DB.withSession('first-unconstrained')   // 就近副本，降低亚太延迟
+    : env.DB;
+}
+function writeDB(env) {
+  return (env.DB && typeof env.DB.withSession === 'function')
+    ? env.DB.withSession('first-primary')         // 写与主库读：强一致
+    : env.DB;
+}
+
+async function currentUser(request, env, primary) {
   const token = cookieGet(request, SESSION_COOKIE);
   if (!token || !env.DB) return null;
   const hash = await sha256hex(token);
   const now = Math.floor(Date.now() / 1000);
   try {
-    return await env.DB.prepare(
+    // 评论 POST 内署名用主库读（primary=true）；auth/me 用就近副本
+    const db = primary ? writeDB(env) : readDB(env);
+    return await db.prepare(
       'SELECT u.github_id, u.login, u.name, u.avatar_url, u.html_url ' +
       'FROM sessions s JOIN users u ON u.id = s.user_id ' +
       'WHERE s.token_hash = ? AND s.expires_at > ?'
@@ -230,7 +246,9 @@ async function handleAuthCallback(request, env, url) {
   }
 
   try {
-    await env.DB.prepare(
+    // 登录是写链路：写入 + 写后读 + 建会话全部走主库，避免副本延迟导致登录态丢失
+    const W = writeDB(env);
+    await W.prepare(
       'INSERT INTO users (github_id, login, name, avatar_url, html_url, last_login_at) ' +
       'VALUES (?, ?, ?, ?, ?, datetime(\'now\')) ' +
       'ON CONFLICT(github_id) DO UPDATE SET ' +
@@ -241,13 +259,13 @@ async function handleAuthCallback(request, env, url) {
       String(ghUser.avatar_url || ''), String(ghUser.html_url || '')
     ).run();
 
-    const row = await env.DB.prepare('SELECT id FROM users WHERE github_id = ?').bind(ghUser.id).first();
+    const row = await W.prepare('SELECT id FROM users WHERE github_id = ?').bind(ghUser.id).first();
     if (!row) return fail('db_error');
 
     const token = randomToken(32);
     const hash = await sha256hex(token);
     const expires = Math.floor(Date.now() / 1000) + SESSION_TTL;
-    await env.DB.prepare(
+    await W.prepare(
       'INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)'
     ).bind(hash, row.id, expires).run();
 
@@ -282,7 +300,7 @@ async function handleAuth(request, env, url) {
     if (token && env.DB) {
       try {
         const hash = await sha256hex(token);
-        await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run();
+        await writeDB(env).prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run();
       } catch (e) { /* 表未建好时忽略 */ }
     }
     const res = reply({ ok: true }, 200, request, env);
@@ -302,8 +320,8 @@ async function handleComments(request, env, url) {
     if (!path.startsWith('/')) return reply({ ok: false, error: 'invalid_path' }, 400, request, env);
     let items;
     try {
-      // 有 comment_auth 表时关联 GitHub 身份；没有时降级到旧查询，评论不中断
-      const rs = await DB.prepare(
+      // 评论列表是纯读：走就近副本。有 comment_auth 表时关联 GitHub 身份；没有时降级。
+      const rs = await readDB(env).prepare(
         'SELECT c.id, c.name, c.content, c.created_at, ' +
         'a.login AS github_login, a.avatar_url AS github_avatar ' +
         'FROM comments c LEFT JOIN comment_auth a ON a.comment_id = c.id ' +
@@ -311,7 +329,7 @@ async function handleComments(request, env, url) {
       ).bind(path).all();
       items = (rs && rs.results) || [];
     } catch (e) {
-      const rs = await DB.prepare(
+      const rs = await readDB(env).prepare(
         'SELECT id, name, content, created_at FROM comments WHERE path = ? ORDER BY id ASC LIMIT 200'
       ).bind(path).all();
       items = (rs && rs.results) || [];
@@ -327,7 +345,9 @@ async function handleComments(request, env, url) {
 
     const path = cleanText(body.path, 300);
     const content = cleanText(body.content, 500);
-    const user = await currentUser(request, env);
+    // 写链路全部走主库：署名读、防刷计数、插入、写后读取都必须强一致
+    const W = writeDB(env);
+    const user = await currentUser(request, env, true);
     const name = user ? user.login : (cleanText(body.name, 24) || '匿名访客');
     if (!path.startsWith('/') || !content) {
       return reply({ ok: false, error: 'invalid_input' }, 400, request, env);
@@ -335,7 +355,7 @@ async function handleComments(request, env, url) {
 
     // 轻量防刷：同一 IP 60 秒内最多 5 条
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    const recent = await DB.prepare(
+    const recent = await W.prepare(
       "SELECT COUNT(*) AS n FROM comments WHERE ip = ? AND created_at > datetime('now','-60 seconds')"
     ).bind(ip).first();
     if (recent && recent.n >= 5) {
@@ -343,14 +363,14 @@ async function handleComments(request, env, url) {
     }
 
     const now = new Date().toISOString().replace('T', ' ').slice(0, 19); // UTC，与 D1 默认值同格式
-    const rs = await DB.prepare(
+    const rs = await W.prepare(
       'INSERT INTO comments (path, name, content, ip, created_at) VALUES (?, ?, ?, ?, ?)'
     ).bind(path, name, content, ip, now).run();
     const id = rs && rs.meta && rs.meta.last_row_id;
 
     if (user && id) {
       try {
-        await DB.prepare(
+        await W.prepare(
           'INSERT INTO comment_auth (comment_id, github_id, login, avatar_url) VALUES (?, ?, ?, ?) ' +
           'ON CONFLICT(comment_id) DO UPDATE SET github_id = excluded.github_id, ' +
           'login = excluded.login, avatar_url = excluded.avatar_url'
@@ -378,11 +398,16 @@ async function handleCount(request, env, url) {
   if (!key) return reply({ ok: false, error: 'missing_key' }, 400, request, env);
 
   if (request.method === 'POST') {
-    await DB.prepare(
+    const W = writeDB(env);
+    await W.prepare(
       'INSERT INTO counters (key, value) VALUES (?, 1) ON CONFLICT(key) DO UPDATE SET value = value + 1'
     ).bind(key).run();
+    // 写后读走主库，立刻拿到 +1 后的值
+    const row = await W.prepare('SELECT value FROM counters WHERE key = ?').bind(key).first();
+    return reply({ ok: true, key: key, count: (row && row.value) || 0 }, 200, request, env);
   }
-  const row = await DB.prepare('SELECT value FROM counters WHERE key = ?').bind(key).first();
+  // 纯读走就近副本
+  const row = await readDB(env).prepare('SELECT value FROM counters WHERE key = ?').bind(key).first();
   return reply({ ok: true, key: key, count: (row && row.value) || 0 }, 200, request, env);
 }
 

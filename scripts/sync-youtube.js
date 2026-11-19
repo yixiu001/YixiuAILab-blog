@@ -1,14 +1,38 @@
 /**
  * YouTube 频道数据同步脚本
- * 抓取 @YixiuAILab 的真实数据，生成 source/_data/youtube.yml
+ * 频道信息统一从站点根 _config.yml 的 services.youtube 读取，生成 source/_data/youtube.yml
  * - 在 hexo generate 前自动运行（before_generate 钩子）
  * - 抓取失败时保留上次数据，不中断构建
  */
 var https = require('https');
 var fs = require('fs');
 var path = require('path');
+var yaml = require('js-yaml');
 
-var CHANNEL = 'YixiuAILab';
+var CONFIG_FILE = path.join(__dirname, '..', '_config.yml');
+
+// 频道地址唯一数据源：_config.yml → services.youtube
+// 读取失败时仅用内置值兜底并告警，正常情况一律以主配置为准
+function loadYoutubeCfg() {
+  try {
+    var doc = yaml.load(fs.readFileSync(CONFIG_FILE, 'utf8')) || {};
+    return (doc.services && doc.services.youtube) || {};
+  } catch (e) {
+    console.warn('[youtube-sync] 读取 _config.yml 的 services.youtube 失败：' + e.message);
+    return {};
+  }
+}
+
+var YT = loadYoutubeCfg();
+if (!YT.handle || !YT.url) {
+  console.warn('[youtube-sync] _config.yml 的 services.youtube 缺少 handle 或 url，使用内置兜底值。');
+}
+var CHANNEL = YT.handle || 'YixiuAILab';
+var CHANNEL_URL = String(YT.url || ('https://www.youtube.com/@' + CHANNEL)).replace(/\/+$/, '');
+var CHANNEL_NAME = YT.name || '一休AI实验室';
+var YT_ORIGIN = 'https://www.youtube.com';
+try { YT_ORIGIN = new URL(CHANNEL_URL).origin; } catch (e) {}
+var WATCH_BASE = YT_ORIGIN + '/watch?v=';
 var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 var DATA_FILE = path.join(__dirname, '..', 'source', '_data', 'youtube.yml');
 var IMG_DIR = path.join(__dirname, '..', 'source', 'images', 'videos');
@@ -16,10 +40,11 @@ var THEME_IMG_DIR = path.join(__dirname, '..', 'themes', 'yixiu', 'source', 'ima
 
 // 视频 ID → 站内讲义文章 / 分类（YouTube 只提供视频数据，这些是本站自有映射）
 // 仅映射仍有站内讲义的文章；无映射的视频自动 fallback 到 YouTube 原链接
-var VIDEO_META = {
-  'h9PJK64By4E': { localUrl: '/posts/apple-id/', category: '海外工具' },
-  'kTVRMm4J5pw': { localUrl: '/posts/biyapay/', category: '支付充值' }
-};
+// 2026-11-19：apple-id / biyapay 两篇讲义已删除，映射一并移除，避免生成站内死链
+var VIDEO_META = {};
+
+// 不再纳入本站数据文件的视频（对应讲义已删除，避免同步时重新写回）
+var EXCLUDED_VIDEO_IDS = ['h9PJK64By4E', 'kTVRMm4J5pw'];
 
 function fetch(url, redirects) {
   redirects = redirects || 0;
@@ -28,7 +53,7 @@ function fetch(url, redirects) {
     https.get(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8' } }, function(res) {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
-        var next = res.headers.location.startsWith('http') ? res.headers.location : 'https://www.youtube.com' + res.headers.location;
+        var next = res.headers.location.startsWith('http') ? res.headers.location : YT_ORIGIN + res.headers.location;
         return fetch(next, redirects + 1).then(resolve, reject);
       }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
@@ -89,6 +114,7 @@ function parseVideos(html) {
   while ((m = re.exec(html))) { if (ids.indexOf(m[1]) < 0) ids.push(m[1]); }
   var out = [];
   ids.forEach(function(id) {
+    if (EXCLUDED_VIDEO_IDS.indexOf(id) >= 0) return; // 已从视频记录中移除，不同步回来
     var i = html.indexOf('"videoId":"' + id + '"');
     var seg = html.slice(i, i + 4200);
     var t = seg.match(/"lockupMetadataViewModel":\{"title":\{"content":"(.*?)"/);
@@ -108,8 +134,8 @@ function parseVideos(html) {
       viewsText: viewsText,
       views: parseNum(viewsText),
       published: timeText,
-      url: meta.localUrl || ('https://www.youtube.com/watch?v=' + id),
-      youtube: 'https://www.youtube.com/watch?v=' + id,
+      url: meta.localUrl || (WATCH_BASE + id),
+      youtube: WATCH_BASE + id,
       category: meta.category || '其他',
       cover: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'
     });
@@ -128,8 +154,8 @@ function buildYaml(data) {
   lines.push('# 同步时间：' + data.syncedAt);
   lines.push('channel:');
   lines.push('  id: ' + CHANNEL);
-  lines.push('  name: 一休AI实验室');
-  lines.push('  url: https://www.youtube.com/@' + CHANNEL);
+  lines.push('  name: ' + CHANNEL_NAME);
+  lines.push('  url: ' + CHANNEL_URL);
   lines.push('  subscribers: ' + data.subscribers);
   lines.push('  subscribersText: "' + yamlEscape(data.subscribersText) + '"');
   lines.push('  videoCount: ' + data.videoCount);
@@ -202,8 +228,8 @@ function downloadThumb(video) {
 function sync() {
   console.log('[youtube-sync] 正在同步 @' + CHANNEL + ' 真实数据...');
   return Promise.all([
-    fetch('https://www.youtube.com/@' + CHANNEL + '/about'),
-    fetch('https://www.youtube.com/@' + CHANNEL + '/videos')
+    fetch(CHANNEL_URL + '/about'),
+    fetch(CHANNEL_URL + '/videos')
   ]).then(function(results) {
     var channel = parseAbout(results[0]);
     var videos = parseVideos(results[1]);
@@ -259,4 +285,11 @@ if (typeof hexo !== 'undefined' && hexo && hexo.extend) {
   registerHook(hexo);
 }
 
-module.exports = { sync: sync, registerHook: registerHook };
+module.exports = {
+  sync: sync,
+  registerHook: registerHook,
+  // 供本地核对频道配置是否真的从 _config.yml 读到（不触发网络请求）
+  youtubeConfig: function() {
+    return { handle: CHANNEL, url: CHANNEL_URL, name: CHANNEL_NAME, origin: YT_ORIGIN };
+  }
+};

@@ -1,13 +1,22 @@
 <%
-  // 打赏组件：数据来自 source/_data/reward.yml
-  // 版式参考：居中头像 + 名字 + 简介/徽标/标题 + 按钮组 + 版权声明
+  // 打赏组件：文案与打赏记录来自 source/_data/reward.yml；
+  // 收款码图片来自站点根 _config.yml 的 services.reward（经 scripts/services.js 读取）。
   // 未配置收款码时显示统一占位视觉，不伪装成可扫的真二维码。
   // 调用方可传 rwCtx: { badge, title, desc, meta, copyright } 区分文章页 / 工具详情页，
   // 并把原「文末作者信息卡」的内容（简介、分类日期）合并进这张收尾卡。
   var rw = site.data.reward || {};
   var rwTitle = rw.title || '请我喝杯咖啡';
-  var rwAlipay = String(rw.alipay || '').trim();
-  var rwWechat = String(rw.wechat || '').trim();
+  var rwCfg = serviceCfg('reward') || {};
+  var rwDir = String(rwCfg.dir || '/images/reward/').replace(/\/+$/, '') + '/';
+  // 填文件名时自动拼目录；填以 / 开头的完整路径时原样使用。
+  // 主配置未填时回退到 reward.yml 的旧键（旧键已移除，仅保留历史兼容）。
+  function rwImage(v) {
+    var s = String(v || '').trim();
+    if (!s) return '';
+    return s.charAt(0) === '/' ? s : rwDir + s;
+  }
+  var rwAlipay = rwImage(rwCfg.alipay || rw.alipay);
+  var rwWechat = rwImage(rwCfg.wechat || rw.wechat);
   var rwDefault = rwAlipay ? 'alipay' : (rwWechat ? 'wechat' : 'alipay');
 
   var ctx = (typeof rwCtx !== 'undefined' && rwCtx) ? rwCtx : {};
@@ -17,7 +26,7 @@
   var ctxMeta  = ctx.meta || null;
   var ctxCopy  = ctx.copyright || null;
 
-  var rwSubUrl  = theme.subscribe_url || (theme.creator && theme.creator.btn_url) || '#';
+  var rwSubUrl  = serviceCfg('youtube').url || '#';
   var rwSubText = (theme.creator && theme.creator.btn_text) || '订阅频道';
 %>
 <section class="rw-block">
@@ -85,7 +94,7 @@
     <div class="rw-panes">
       <div class="rw-pane <%= rwDefault === 'alipay' ? 'on' : '' %>" data-rw-pane="alipay">
         <% if(rwAlipay){ %>
-        <div class="rw-qr"><img src="<%= url_for('/images/reward/' + rwAlipay) %>" alt="支付宝收款码"></div>
+        <div class="rw-qr"><img src="<%= url_for(rwAlipay) %>" alt="支付宝收款码"></div>
         <p class="rw-qr-tip">打开支付宝 · 扫一扫</p>
         <% } else { %>
         <div class="rw-qr rw-qr-ph">
@@ -117,7 +126,7 @@
       </div>
       <div class="rw-pane <%= rwDefault === 'wechat' ? 'on' : '' %>" data-rw-pane="wechat">
         <% if(rwWechat){ %>
-        <div class="rw-qr"><img src="<%= url_for('/images/reward/' + rwWechat) %>" alt="微信收款码"></div>
+        <div class="rw-qr"><img src="<%= url_for(rwWechat) %>" alt="微信收款码"></div>
         <p class="rw-qr-tip">打开微信 · 扫一扫</p>
         <% } else { %>
         <div class="rw-qr rw-qr-ph">

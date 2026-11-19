@@ -14,7 +14,7 @@
   var frIntro = fr.intro || '认识的同好博客和频道，欢迎互相串门。';
   var frApplyNote = fr.apply_note || '想交换友链的话，欢迎通过频道私信我。';
   var frReqs = fr.requirements || [];
-  var subUrl = theme.subscribe_url || (theme.creator && theme.creator.btn_url) || '#';
+  var subUrl = serviceCfg('youtube').url || '#';
 %>
 <div class="wrap">
   <div class="crumb"><a href="<%= url_for('/') %>">首页</a><span>›</span><%= page.title %></div>

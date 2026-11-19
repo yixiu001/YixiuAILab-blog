@@ -1,6 +1,9 @@
 # --------------------------------------------------
-# 一休定制主题 · 配置
+# 一休定制主题 · 配置（外观与文案）
 # --------------------------------------------------
+# ⚠️ 所有对外地址、接口与待替换占位（评论/登录 API、YouTube、Telegram、GitHub、
+#    打赏收款码图片）统一在站点根 _config.yml 的 services 段配置；
+#    本文件不再保存任何地址或图片路径，模板通过 scripts/services.js 读取。
 
 # 站点 Logo
 # brand_logo：品牌标识（六边形 AI 实验室徽章），用于顶栏/页脚品牌位
@@ -19,8 +22,8 @@ nav:
   - { text: 资源, url: /resources/, match: [/resources/, /tools/] }
   - { text: 关于, url: /about/, match: [/about/] }
 
+# 订阅按钮文案；按钮链接取自 _config.yml 的 services.youtube.url
 subscribe_text: 订阅频道
-subscribe_url: https://www.youtube.com/@YixiuAILab
 
 # --------------------------------------------------
 # 首页 v2：课程 + 文章知识门户（不含 YouTube 视频内容）
@@ -54,49 +57,24 @@ creator:
   name: 一休AI实验室 · 科技分享博主
   desc: 专注 AI 工具、免费资源与效率技巧。把体系化课程和教程沉淀成图文，方便你随时查阅、随时落地。
   btn_text: 订阅频道
-  btn_url: https://www.youtube.com/@YixiuAILab
-  channels:
-    - { name: YouTube, icon: youtube, url: https://www.youtube.com/@YixiuAILab, class: yt }
-    - { name: Telegram 频道, icon: telegram, url: https://t.me, class: tg }
-    - { name: GitHub 仓库, icon: github, url: https://github.com, class: gh }
+  # 渠道按钮的名称 / 图标 / 顺序在 _config.yml 的 services.channels 配置，
+  # 链接取 services.youtube / telegram / github 的 url
 
 # --------------------------------------------------
 # 评论区（文章页 + 课程章节页）
-# 静态站点无后端，评论需接外部服务；未配置时页面显示「待接入」，不伪造评论。
-# 推荐 cloudflare：项目根目录 cloudflare/comments/ 是可直接部署的 Workers + D1 模板。
-# 启用步骤：部署 Worker → 把 API 地址填入 cloudflare.api → enable 改 true
+# 开关、provider、各服务参数与接口地址已统一迁到站点根 _config.yml 的
+# services.comments / services.api 段，本文件不再保存评论配置。
+# 静态站点无后端，未配置接口时页面显示「待接入」，不伪造评论。
+# Workers + D1 模板见项目根目录 cloudflare/comments/。
 # --------------------------------------------------
-comments:
-  enable: true
-  provider: cloudflare   # cloudflare | giscus | twikoo | waline
-  cloudflare:
-    api: "https://api.yixiu521.com"   # 已部署的 Worker 自定义域名（见 cloudflare/comments/）
-  giscus:
-    repo: ""             # owner/repo（公开仓库，已开启 Discussions）
-    repo_id: ""          # 在 https://giscus.app/zh-CN 生成
-    category: General
-    category_id: ""
-    mapping: pathname
-    reactions: true
-    lang: zh-CN
-  twikoo:
-    env_id: ""           # 腾讯云 CloudBase 环境 ID 或自建服务地址
-    cdn: "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.min.js"
-  waline:
-    server_url: ""       # 例：https://waline.xxx.vercel.app
-    cdn: "https://unpkg.com/@waline/client@v3/dist/waline.js"
-    css: "https://unpkg.com/@waline/client@v3/dist/waline.css"
 
 # --------------------------------------------------
 # 全站 GitHub 登录（导航头像 + 评论区身份）
-# 依赖 cloudflare/comments Worker；未配置 OAuth 凭证时自动隐藏入口。
-# 凭证通过 Worker Secret 设置，不写在本文件：
+# 开关在 _config.yml 的 services.auth，接口地址在 services.api。
+# OAuth 凭证通过 Worker Secret 设置，不写进任何配置文件：
 #   .\cf.ps1 secret put GITHUB_CLIENT_ID
 #   .\cf.ps1 secret put GITHUB_CLIENT_SECRET
 # --------------------------------------------------
-auth:
-  enable: true
-  api: "https://api.yixiu521.com"
 
 # 页脚
 footer:

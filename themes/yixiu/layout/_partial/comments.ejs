@@ -1,16 +1,17 @@
 <%
   // 评论区组件（文章页 + 课程章节页共用）
-  // 静态站点没有后端，评论依赖外部服务。配置集中在 themes/yixiu/_config.yml 的 comments 段。
+  // 静态站点没有后端，评论依赖外部服务。
+  // 配置统一在站点根 _config.yml 的 services 段：接口地址 services.api、开关 services.comments。
   // provider: cloudflare（自建 Workers + D1，推荐）/ giscus / twikoo / waline
   // 未配置凭证 → 显示「待接入」提示，不伪造评论、不伪装可提交。
-  var cm = theme.comments || {};
+  var apiCfg = serviceApi();
+  var cm = serviceCfg('comments');
   var cmProvider = String(cm.provider || 'cloudflare').toLowerCase();
-  var cf = cm.cloudflare || {};
   var g  = cm.giscus || {};
   var tk = cm.twikoo || {};
   var wa = cm.waline || {};
 
-  var cfReady = !!String(cf.api || '').trim();
+  var cfReady = !!apiCfg.base;
   var gReady  = !!(String(g.repo || '').trim() && String(g.repo_id || '').trim() && String(g.category_id || '').trim());
   var tkReady = !!String(tk.env_id || '').trim();
   var waReady = !!String(wa.server_url || '').trim();
@@ -54,7 +55,7 @@
   </div>
   <script>
   (function(){
-    var API = <%- jsLit(cf.api) %>.replace(/\/+$/, '') + '/api/comments';
+    var API = <%- jsLit(apiCfg.base + '/api/comments') %>;
     var PAGE = location.pathname;
     var form = document.getElementById('cm-form');
     var gate = document.getElementById('cm-gate');
@@ -313,7 +314,7 @@
   <div class="cm-pending">
     <div class="cm-pending-ic" aria-hidden="true">&#128172;</div>
     <div class="cm-pending-t">评论区待接入</div>
-    <p class="cm-pending-d">本站是静态站点，评论需要接入后端服务。推荐用 <b>Cloudflare Workers + D1</b> 自建（免费额度够用、数据自己掌握），部署后把 API 地址填进主题配置的 <code>comments</code> 段即可启用。</p>
+    <p class="cm-pending-d">本站是静态站点，评论需要接入后端服务。推荐用 <b>Cloudflare Workers + D1</b> 自建（免费额度够用、数据自己掌握），部署后把 API 地址填进站点根 <code>_config.yml</code> 的 <code>services.api.base</code> 即可启用。</p>
     <div class="cm-pending-tags"><span>Cloudflare</span><span>Giscus</span><span>Twikoo</span><span>Waline</span></div>
   </div>
   <% } %>

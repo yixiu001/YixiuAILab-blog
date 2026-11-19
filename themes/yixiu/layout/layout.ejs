@@ -32,16 +32,16 @@
   <meta name="twitter:title" content="<%= seoTitle %>">
   <meta name="twitter:description" content="<%= seoDesc %>">
   <meta name="twitter:image" content="<%= seoImage %>">
-  <% var authCfg = theme.auth || {}; %>
+  <% var apiCfg = serviceApi(); var authCfg = serviceCfg('auth'); %>
   <link rel="preload" as="style" href="<%= assetUrl('/css/style.css') %>">
   <link rel="stylesheet" href="<%= assetUrl('/css/style.css') %>">
-  <% if(authCfg.enable === true && authCfg.api){ %>
-  <link rel="preconnect" href="<%= authCfg.api %>" crossorigin>
+  <% if(authCfg.enable === true && apiCfg.base){ %>
+  <link rel="preconnect" href="<%= apiCfg.base %>" crossorigin>
   <% } %>
   <script>
     window.__YIXIU_AUTH = {
       enable: <%= authCfg.enable === true ? 'true' : 'false' %>,
-      api: <%- JSON.stringify(String(authCfg.api || '')).replace(/</g, '\\u003c') %>
+      api: <%- JSON.stringify(apiCfg.base).replace(/</g, '\\u003c') %>
     };
     window.__YIXIU_QR = <%- JSON.stringify(assetUrl('/js/qrcode.min.js')).replace(/</g, '\\u003c') %>;
   </script>

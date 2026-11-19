@@ -1,26 +1,66 @@
-# Hexo Configuration
-## Docs: https://hexo.io/docs/configuration.html
-## Source: https://github.com/hexojs/hexo/
+# ==================================================
+# 一休AI实验室 · Hexo 站点配置
+# ==================================================
+# 官方文档：https://hexo.io/docs/configuration.html
+#
+# 配置分工（改动前先确认改的是哪一层）：
+#   本文件              → 站点级设置：标题、网址、写作、分页、目录，以及末尾「外部服务」段
+#   themes/yixiu/_config.yml → 主题外观与文案：导航、Logo、首页文案、页脚
+#   services 段         → 所有对外地址、接口，以及待替换的占位配置（见下方清单）
+#   source/_data/*.yml  → 内容数据：课程、工具导航、打赏文案与打赏记录
+#   source/_posts/      → 文章正文；封面统一放 source/images/covers/
+#
+# 【待替换占位清单】下面这些值还没定，后续只改本文件对应行即可，
+#   不需要动模板、JS 或数据文件。占位期间页面会显示中性占位视觉，不伪造真实内容：
+#   1) services.telegram.url   → Telegram 频道真实地址（当前 https://t.me）
+#   2) services.github.url     → GitHub 仓库真实地址（当前 https://github.com）
+#   3) services.reward.alipay  → 支付宝收款码图片文件名（当前留空）
+#   4) services.reward.wechat  → 微信收款码图片文件名（当前留空）
+#   另：source/_data/reward.yml 的 supporters 仍是演示打赏记录，正式上线前需清空
+#       或换成真实且经对方同意公开的信息（按约定暂不动）。
+#
+# 构建与部署：
+#   本地构建  npm run build   （= hexo generate && node scripts/optimize-assets.js）
+#   本地预览  npm run server  （默认 http://localhost:4000，此端口在 Worker CORS 白名单内）
+#   上线      推 GitHub main → Cloudflare Pages 自动构建（输出目录 public），不使用 hexo deploy
+#   sitemap.xml / robots.txt 由 scripts/seo-generator.js 生成，无需 sitemap 插件
+# ==================================================
 
-# Site
+# --------------------------------------------------
+# 一、站点信息
+# --------------------------------------------------
 title: 一休AI实验室
 subtitle: 体系化课程与图文教程，让知识可落地
+# 站点默认描述：文章页未写 description / summary 时，用于 meta、og、twitter
 description: 一休AI实验室，沉淀 AI 实战课程、图文教程与免费资源合集
-keywords:
+# 站点关键词，多个用英文逗号分隔（当前主题只输出 description，此处留作后续 SEO 备用）
+keywords: 一休AI实验室, AI 教程, AI 工具, 大模型, AI Agent, Agent Skills, AGENTS.md, 免费资源
 author: 一休
+# language 决定 <html lang>；timezone 决定文章日期的解析基准
 language: zh-CN
 timezone: Asia/Shanghai
 
-# URL
-## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
+# --------------------------------------------------
+# 二、网址与永久链接
+# --------------------------------------------------
+# ⚠️ 当前为调试域名 blog1.yixiu521.com。切正式域名时改这里，并同步：
+#    1) cloudflare/comments/wrangler.toml 的 ALLOW_ORIGIN（去掉 blog1 调试白名单）
+#    2) sitemap / canonical / og:image 都基于本值自动重算，无需另改
+# 站点部署在域名根目录，root 用 Hexo 默认值（url 的 pathname）即可；
+# 若将来迁到子目录（如 /blog/），需显式加 root: /blog/
 url: https://blog1.yixiu521.com
+# 文章地址固定为 /posts/<文件名>/。改动会让已发布链接全部失效，务必谨慎
 permalink: posts/:title/
 permalink_defaults:
+# 漂亮链接：保留目录式 URL（…/index.html 结尾），与 Pages 的静态托管方式匹配
 pretty_urls:
-  trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
-  trailing_html: true # Set to false to remove trailing '.html' from permalinks
+  trailing_index: true   # 设为 false 可去掉链接结尾的 index.html
+  trailing_html: true    # 设为 false 可去掉结尾的 .html（不影响 index.html）
 
-# Directory
+# --------------------------------------------------
+# 三、目录
+# --------------------------------------------------
+# 一般保持默认；archive_dir 同时被 scripts/seo-generator.js 用来生成归档页 URL
 source_dir: source
 public_dir: public
 tag_dir: tags
@@ -28,22 +68,32 @@ archive_dir: archives
 category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
+# 原样复制到 public、不经渲染的文件（支持 glob）。
+# 注意：source/_headers 是 Cloudflare Pages 缓存规则，因下划线开头会被 Hexo 忽略，
+#      由 scripts/optimize-assets.js 在构建末尾手动复制进 public
 skip_render:
 
-# Writing
-new_post_name: :title.md # File name of new posts
+# --------------------------------------------------
+# 四、写作
+# --------------------------------------------------
+new_post_name: :title.md   # 新建文章的文件名格式，:title 即文章标题
 default_layout: post
-titlecase: false # Transform title into titlecase
+titlecase: false           # 不把标题转成英文 Title Case（中文标题无需）
+# 外链：整站自动在新标签打开并带 rel="noopener"。
+# 文章正文与参考资料里的引用链接都依赖这一项；exclude 可填不希望被处理的域名
 external_link:
-  enable: true # Open external links in new tab
-  field: site # Apply to the whole site
-  exclude: ''
-filename_case: 0
-render_drafts: false
-post_asset_folder: false
-relative_link: false
+  enable: true
+  field: site              # site = 整站生效；post = 仅文章正文生效
+  exclude: []              # 例：['yixiu521.com', 'www.yixiu521.com']
+filename_case: 0           # 0 保持原样；1 转小写；2 转大写
+render_drafts: false       # 草稿默认不生成；本地预览草稿时改成 true
+post_asset_folder: false   # 不用同名资源文件夹；封面统一放 source/images/covers/
+relative_link: false       # 使用根相对绝对路径，避免嵌套页面链接错乱
+# ⚠️ future: true 表示「未来日期的文章照常生成」。本项目改文章 date 不会定时发布，
+#    推到 main 后即刻上线；需要延迟发布请用草稿或暂不提交
 future: true
 syntax_highlighter: highlight.js
+# 当前启用 highlight.js；下面 prismjs 段是切换高亮器时才生效的备用配置
 highlight:
   line_number: true
   auto_detect: false
@@ -55,50 +105,168 @@ prismjs:
   line_number: true
   tab_replace: ''
 
-# Home page setting
-# path: Root path for your blogs index page. (default = '')
-# per_page: Posts displayed per page. (0 = disable pagination)
-# order_by: Posts order. (Order by date descending by default)
-index_generator:
-  path: ''
-  per_page: 10
-  order_by: -date
+# --------------------------------------------------
+# 五、Markdown 渲染（hexo-renderer-marked）
+# --------------------------------------------------
+# 插件默认已开启 GFM（表格、任务列表、删除线）、标题锚点与自动链接，无需额外配置。
+# 如需自定义，可新增 marked: 段，常用项如下（键名来自插件文档）：
+# marked:
+#   gfm: true              # GitHub 风格 Markdown
+#   breaks: true           # 单换行渲染为 <br>
+#   headerIds: true        # 给标题加 id，供目录锚点使用
+#   autolink: true         # 裸网址自动转为链接
+#   lazyload: true         # 图片加 loading="lazy"
+#   descriptionLists: false # 关闭可显著提升渲染性能
+# 安全提示：该渲染器默认不消毒文章里的原始 HTML；本站文章均由自己撰写、可控。
+#          若将来开放外部投稿，需开启 dompurify: true 或改用 markdown-it 渲染器。
 
-# Category & Tag
+# --------------------------------------------------
+# 六、首页与分页
+# --------------------------------------------------
+# 首页归档列表由 hexo-generator-index 生成；本站首页是自研「课程 + 文章」门户，
+# 文章列表实际在 /archives/，这里保留默认分页设置供归档页使用
+index_generator:
+  path: ''                 # 首页路径，留空即站点根
+  per_page: 10             # 每页文章数；0 = 不分页
+  order_by: -date          # 按日期倒序（新 → 旧）
+per_page: 10               # 归档 / 分类 / 标签页每页条数；0 = 不分页
+pagination_dir: page       # 分页 URL 形如 /archives/page/2/
+
+# --------------------------------------------------
+# 七、分类与标签
+# --------------------------------------------------
 default_category: uncategorized
+# 想把中文分类固定成某个 slug 时在这里写映射，避免自动转义出乱码路径：
+# category_map:
+#   "AI 工具": ai-tools
+# tag_map:
+#   "免费资源": free-resources
 category_map:
 tag_map:
 
-# Metadata elements
-## https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
+# --------------------------------------------------
+# 八、页面元信息与日期格式
+# --------------------------------------------------
+# 是否输出 <meta name="generator" content="Hexo x.x.x">；设 false 可隐藏版本号
 meta_generator: true
-
-# Date / Time format
-## Hexo uses Moment.js to parse and display date
-## You can customize the date format as defined in
-## http://momentjs.com/docs/#/displaying/format/
+# Hexo 用 Moment.js 格式化：https://momentjs.com/docs/#/displaying/format/
 date_format: YYYY-MM-DD
 time_format: HH:mm:ss
-## updated_option supports 'mtime', 'date', 'empty'
+# front-matter 未写 updated 时如何取值：
+#   mtime = 文件修改时间（当前值，Hexo 默认）
+#   date  = 与 date 相同；Git / CI 工作流下更稳，sitemap 的 lastmod 不会随检出时间漂移
+#   empty = 不生成 updated（部分主题可能不兼容）
+# 本站 sitemap 由 scripts/seo-generator.js 生成，lastmod 取自 updated / date
 updated_option: 'mtime'
 
-# Pagination
-## Set per_page to 0 to disable pagination
-per_page: 10
-pagination_dir: page
-
-# Include / Exclude file(s)
-## include:/exclude: options only apply to the 'source/' folder
+# --------------------------------------------------
+# 九、文件包含 / 排除
+# --------------------------------------------------
+# include / exclude 只作用于 source/；ignore 作用于所有目录。
+# 支持 glob，路径必须加引号；下划线开头的文件默认被忽略，需用 include 才纳入
+# 例：include: ['_headers'] / exclude: ['js/test.js'] / ignore: ['**/draft']
 include:
 exclude:
 ignore:
 
-# Extensions
-## Plugins: https://hexo.io/plugins/
-## Themes: https://hexo.io/themes/
+# --------------------------------------------------
+# 十、扩展与主题
+# --------------------------------------------------
+# 主题为自研 yixiu，禁止替换成第三方模板；主题自身配置在 themes/yixiu/_config.yml
 theme: yixiu
+# 若需在不改主题文件的前提下覆盖主题配置，可启用 theme_config（优先级最高）：
+# theme_config:
+#   comments:
+#     enable: false
+# 注意：主题配置请集中放在一个地方，避免多处覆盖难以排查
 
-# Deployment
-## Docs: https://hexo.io/docs/one-command-deployment
-deploy:
-  type: ''
+# --------------------------------------------------
+# 十一、部署
+# --------------------------------------------------
+# 本站不使用 hexo deploy：推 GitHub main 后由 Cloudflare Pages 自动执行
+#   构建命令：npm run build
+#   输出目录：public
+#   Node 版本：22（Pages 环境变量 NODE_VERSION）
+# 因此这里不配置 deploy；package.json 里的 npm run deploy 是 Hexo 默认脚本，本站无需调用。
+# 评论 / 登录 Worker 是另一条独立链路，在 cloudflare/comments/ 下用 .\cf.ps1 deploy 部署。
+# 若将来需要一键部署，先安装对应部署插件，再按下例填写：
+# deploy:
+#   type: git
+#   repo: <仓库地址>
+#   branch: main
+
+# --------------------------------------------------
+# 十二、外部服务、账号与占位配置（唯一配置处）
+# --------------------------------------------------
+# 主题模板、评论/登录前端、打赏弹窗、YouTube 同步脚本全部从这里取值，改这一处即可生效；
+# themes/yixiu/_config.yml 不再保存任何外部地址，source/_data/reward.yml 不再保存图片配置。
+# 带「占位」标注的项见文件头「待替换占位清单」。
+#
+# ⚠️ Worker 部署侧还有独立配置，改这里不会自动同步，需另行修改并重新部署：
+#    cloudflare/comments/wrangler.toml → ALLOW_ORIGIN（站点域名白名单）
+#    GitHub OAuth App 后台            → 回调地址（固定为 base + /api/auth/github/callback）
+#    完成后用 .\cf.ps1 deploy 重新部署 Worker。
+services:
+  # --- 自建接口：Cloudflare Workers + D1（评论 + GitHub 登录共用）---
+  # 只配 Worker 域名；/api/comments、/api/auth/* 等路径是 Worker 固定实现，无需配置
+  api:
+    base: https://api.yixiu521.com          # Worker 自定义域名；不要用 workers.dev
+
+  # --- 评论区 ---
+  # provider：cloudflare（当前在用）/ giscus / twikoo / waline
+  # cloudflare 的接口地址取上面的 api.base，此处不再重复填写
+  comments:
+    enable: true
+    provider: cloudflare
+    giscus:
+      repo: ''                             # owner/repo（公开仓库，需开启 Discussions）
+      repo_id: ''                          # 在 https://giscus.app/zh-CN 生成
+      category: General
+      category_id: ''
+      mapping: pathname
+      reactions: true
+      lang: zh-CN
+    twikoo:
+      env_id: ''                           # CloudBase 环境 ID 或自建服务地址
+      cdn: https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.min.js
+    waline:
+      server_url: ''
+      cdn: https://unpkg.com/@waline/client@v3/dist/waline.js
+      css: https://unpkg.com/@waline/client@v3/dist/waline.css
+
+  # --- 全站 GitHub 登录 ---
+  # OAuth 的 Client ID / Secret 是 Worker Secret，不写在本文件
+  auth:
+    enable: true
+
+  # --- YouTube 频道 ---
+  # handle 供 scripts/sync-youtube.js 抓取频道数据；url 用于订阅按钮与频道入口
+  youtube:
+    name: 一休AI实验室
+    handle: YixiuAILab
+    url: https://www.youtube.com/@YixiuAILab
+
+  # --- 其他社交账号（占位，待替换）---
+  # ⚠️ 这两项目前是占位地址，拿到真实频道 / 仓库地址后直接替换即可；
+  #    首页 / 关于 / 课程页的渠道按钮链接会自动跟着变
+  telegram:
+    url: https://t.me
+  github:
+    url: https://github.com
+
+  # --- 打赏收款码（占位，待替换）---
+  # 图片放进 source/images/reward/ 后，这里只填文件名，例如 alipay.png、wechat.png；
+  # 也支持以 / 开头的完整路径（如 /images/reward/alipay.png）。
+  # 留空 = 打赏弹窗显示「收款码占位」图形，不会伪造可扫的假二维码。
+  # 打赏文案与打赏记录仍在 source/_data/reward.yml，不在这里配置。
+  reward:
+    alipay: ''
+    wechat: ''
+    dir: /images/reward/             # 图片存放目录，一般不用改
+
+  # --- 渠道按钮（首页 / 关于 / 课程页共用）---
+  # 只定义展示信息与顺序，链接统一取上面各服务的 url；删掉某行即隐藏该渠道
+  channels:
+    - { key: youtube,  name: YouTube,       icon: youtube,  class: yt }
+    - { key: telegram, name: Telegram 频道, icon: telegram, class: tg }
+    - { key: github,   name: GitHub 仓库,   icon: github,   class: gh }

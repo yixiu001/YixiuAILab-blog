@@ -5,6 +5,7 @@
 (function(){
   var AUTH = window.__YIXIU_AUTH || {};
   var API = String(AUTH.api || '').replace(/\/+$/, '');
+  // 端点路径是 Worker 固定实现，只有域名从 _config.yml 注入
   var ENABLE = AUTH.enable === true;
   if(!ENABLE || !API) return;
 

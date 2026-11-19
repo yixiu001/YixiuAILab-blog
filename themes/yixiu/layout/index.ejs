@@ -139,7 +139,7 @@
         <div class="v2about-name"><%= theme.creator.name %></div>
         <p><%= theme.creator.desc %></p>
         <div class="v2channels">
-          <% theme.creator.channels.forEach(function(ch){ %>
+          <% serviceChannels().forEach(function(ch){ %>
           <a href="<%= ch.url %>" class="v2ch <%= ch.class %>" target="_blank" rel="noopener"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg><%= ch.name %></a>
           <% }); %>
         </div>

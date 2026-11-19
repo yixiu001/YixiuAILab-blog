@@ -36,8 +36,8 @@
   var supTotal = supHasAmount ? '¥' + (Math.round(supSum * 100) / 100).toFixed(2) : '—';
 
   var creator  = theme.creator || {};
-  var channels = creator.channels || [];
-  var subUrl   = theme.subscribe_url || (creator.btn_url) || '#';
+  var channels = serviceChannels();
+  var subUrl   = serviceCfg('youtube').url || '#';
   var slogan  = (theme.v2 && theme.v2.hero) ? theme.v2.hero.title : '';
   var chDesc  = { yt: '视频教程与工具测评', tg: '图文速递与更新提醒', gh: '开源配置与工具仓库' };
 

@@ -234,7 +234,7 @@
       <p><%= theme.creator.desc %></p>
       <div class="stats"><div><b><%= yt.subscribersText || '—' %></b>订阅</div><div><b><%= yt.videoCount != null ? yt.videoCount : '—' %></b>视频</div><div><b><%= courses.length %></b>课程</div></div></div></div>
     <div class="side-card"><div class="channels"><div class="t">关注我的频道</div>
-      <% theme.creator.channels.forEach(function(ch){ %><a class="ch <%= ch.class %>" href="<%= ch.url %>" target="_blank" rel="noopener"><span class="ico"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg></span><%= ch.name %><span class="arw">→</span></a><% }); %>
+      <% serviceChannels().forEach(function(ch){ %><a class="ch <%= ch.class %>" href="<%= ch.url %>" target="_blank" rel="noopener"><span class="ico"><svg class="sicon"><use href="#i-<%= ch.icon %>"></use></svg></span><%= ch.name %><span class="arw">→</span></a><% }); %>
     </div></div>
   </aside>
 </main>
